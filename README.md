@@ -6,9 +6,10 @@ An immersive, highly interactive, retro-futuristic K.I.T.T. (Knight Rider) cockp
 
 ---
 
-### ⚠️ Disclaimer & Fun Notes
+### ⚠️ Eğlence Amaçlı Notlar / Disclaimer & Fun Notes
 
-This project was developed entirely **for fun, jokes, and nostalgic entertainment purposes** for our brilliant developer and pilot **Arda**. It is **100% completely free of charge**, non-commercial, open-source, and is meant for good laughs and retro supercar banter. Enjoy the nostalgia!
+*   **TR:** Bu proje, dahi yazılımcımız ve pilotumuz **Arda** için tamamen **şakasına, nostalji ve eğlence amaçlı** geliştirilmiştir. **%100 tamamen ücretsizdir**, kar amacı gütmez ve açık kaynaklı bir mizah projesidir. K.I.T.T. size yapay zekalı bir spor araba ruhuyla cana yakın şakalar yapar!
+*   **EN:** This project was developed entirely **for fun, jokes, and nostalgic entertainment purposes** for our dahi developer **Arda**. It is **100% completely free of charge**, non-commercial, open-source, and is meant for good laughs. K.I.T.T. is here to offer friendly and humorous retro supercar banter!
 
 ---
 
