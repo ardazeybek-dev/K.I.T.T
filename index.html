@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>K.I.T.T. - Kara Şimşek Supercar Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for Retro/Monospace Look -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            mono: ['Share Tech Mono', 'monospace'],
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'radar-sweep': 'radar-sweep 3s linear infinite',
+            'road-scroll': 'road-scroll 0.8s linear infinite',
+            'car-scan': 'car-scan 2s ease-in-out infinite',
+            'spin-slow': 'spin 12s linear infinite',
+          },
+          keyframes: {
+            'radar-sweep': {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' },
+            },
+            'road-scroll': {
+              '0%': { transform: 'translateY(0%)' },
+              '100%': { transform: 'translateY(50%)' },
+            },
+            'car-scan': {
+              '0%, 100%': { top: '5%' },
+              '50%': { top: '95%' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Sharp, High-Contrast Glow for Texts */
+    .led-digital {
+      color: #ff3b30;
+      text-shadow: 0 0 8px rgba(255, 59, 48, 0.85);
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 2px;
+    }
+
+    .led-orange {
+      color: #f97316;
+      text-shadow: 0 0 8px rgba(249, 115, 22, 0.85);
+    }
+
+    .led-green {
+      color: #22c55e;
+      text-shadow: 0 0 8px rgba(34, 197, 94, 0.85);
+    }
+
+    .led-yellow {
+      color: #eab308;
+      text-shadow: 0 0 8px rgba(234, 179, 8, 0.85);
+    }
+
+    .led-blue {
+      color: #3b82f6;
+      text-shadow: 0 0 8px rgba(59, 130, 246, 0.85);
+    }
+    
+    /* Neon Border Glows */
+    .border-glow-red { border-color: rgba(239, 68, 68, 0.2); box-shadow: 0 0 10px rgba(239, 68, 68, 0.1); }
+    .border-glow-orange { border-color: rgba(249, 115, 22, 0.2); box-shadow: 0 0 10px rgba(249, 115, 22, 0.1); }
+    .border-glow-blue { border-color: rgba(59, 130, 246, 0.2); box-shadow: 0 0 10px rgba(59, 130, 246, 0.1); }
+    
+    /* Button Base Styles (Dark & Sleek, glowing on hover!) */
+    .interactive-btn {
+      background-color: #0a0a0a;
+      border: 1px solid #1c1c1c;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      touch-action: manipulation; /* Prevents double-tap zoom delay on mobile! */
+    }
+    
+    /* Specific Button Hover Glows */
+    .btn-glow-red:hover {
+      border-color: #ef4444;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+      color: #ef4444;
+    }
+    .btn-glow-orange:hover {
+      border-color: #f97316;
+      box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+      color: #f97316;
+    }
+    .btn-glow-green:hover {
+      border-color: #22c55e;
+      box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+      color: #22c55e;
+    }
+    .btn-glow-blue:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+      color: #3b82f6;
+    }
+    
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #000; }
+    ::-webkit-scrollbar-thumb { background: rgba(249, 115, 22, 0.4); border-radius: 2px; }
+    
+    /* Shake Animation for Turbo Boost */
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(0px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(2px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(2px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+    .shaking { animation: shake 0.08s infinite; }
+
+    /* Butter-smooth K.I.T.T. Header Scanner Animation */
+    @keyframes scanner-slide {
+      0% { left: 0%; }
+      50% { left: 80%; }
+      100% { left: 0%; }
+    }
+    .scanner-active {
+      animation: scanner-slide 1.8s ease-in-out infinite;
+    }
+
+    /* Perspective Holographic Warp Particle Scatter Animation */
+    @keyframes warp-dust {
+      0% { transform: translateY(-40px) scale(0.3); opacity: 0; }
+      15% { opacity: 0.85; }
+      85% { opacity: 0.85; }
+      100% { transform: translateY(115px) scale(1.6); opacity: 0; }
+    }
+    .warp-particle {
+      animation: warp-dust var(--warp-time, 4s) linear infinite;
+    }
+  </style>
+</head>
+<body id="cockpit-body" class="bg-neutral-950 text-neutral-200 font-mono h-full overflow-y-auto lg:overflow-hidden select-none transition-all duration-300">
+
+  <!-- TOP ORANGE STATUS HEADER BAR -->
+  <div class="h-12 bg-black border-b-2 border-orange-600 flex items-center justify-between px-4 sm:px-6 relative z-30">
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-2.5 h-2.5 bg-orange-500 rounded-full animate-ping"></div>
+      <span class="font-orbitron font-bold tracking-wider sm:tracking-widest text-orange-500 text-[11px] sm:text-[13px] led-orange">K.I.T.T. SYSTEM [ORANGE PROTOCOL]</span>
+    </div>
+    
+    <!-- Red/Orange Front Light Scanner Simulation -->
+    <div class="absolute inset-x-1/3 top-1/2 -translate-y-1/2 h-3.5 bg-neutral-900 rounded border border-orange-950 overflow-hidden hidden md:block">
+      <div id="front-scanner" class="absolute top-0 bottom-0 w-16 bg-orange-500 blur-[1px] scanner-active" style="box-shadow: 0 0 10px rgba(249,115,22,0.95);"></div>
+    </div>
+
+    <!-- Mapped PILOT: Editable Input Box for Decoration -->
+    <div class="flex items-center gap-2 text-xs">
+      <button id="btn-config-api" class="bg-orange-600 hover:bg-orange-500 text-black px-2.5 py-1 rounded font-orbitron font-extrabold text-[9px] sm:text-[10px] tracking-wider transition-all flex items-center gap-1 active:scale-95 shadow-lg">
+        <i data-lucide="key" class="w-2.5 h-2.5 sm:w-3 sm:h-3"></i>
+        <span>CONFIG API</span>
+      </button>
+      <div class="flex items-center gap-1.5 bg-neutral-950 border border-neutral-900 px-2 py-0.5 sm:py-1 rounded">
+        <span class="text-neutral-500 font-bold text-[10px]">PILOT:</span>
+        <input id="input-pilot-name" type="text" value="ARDA" class="bg-transparent text-orange-500 font-bold tracking-wider font-orbitron led-orange w-12 sm:w-16 focus:outline-none focus:border-b border-orange-950 text-center uppercase text-[10px] sm:text-xs" placeholder="NAME" title="Süs Pilot Girişi" />
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN COCKPIT DASHBOARD -->
+  <div class="min-h-[calc(100vh-3rem)] lg:h-[calc(100vh-3rem)] grid grid-cols-12 gap-4 p-4 relative z-10 overflow-y-auto lg:overflow-hidden bg-neutral-950">
+    
+    <!-- LEFT PANEL: SPEED HUD & CONTROL PODS -->
+    <div class="col-span-12 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full lg:overflow-y-auto pr-1">
+      
+      <!-- Authentic 7-Segment Displays (High Contrast & Crisp) -->
+      <div class="bg-black border border-neutral-900 rounded-md p-3.5 flex flex-col gap-3 relative bg-gradient-to-b from-neutral-950 to-black">
+        <div class="absolute top-0 right-0 bg-orange-600 text-black text-[9px] px-2 font-bold font-orbitron">DIAGNOSTICS</div>
+        
+        <!-- Speedometer -->
+        <div class="flex items-center justify-between border-b border-neutral-900 pb-2">
+          <div class="flex flex-col">
+            <span class="text-[10px] text-neutral-500 font-orbitron font-bold">SPEED</span>
+            <span class="text-[9px] text-orange-900">MPH</span>
+          </div>
+          <div class="text-right pr-2">
+            <span id="speed-val" class="led-digital text-4xl font-black">000</span>
+          </div>
+        </div>
+
+        <!-- Range -->
+        <div class="flex items-center justify-between border-b border-neutral-900 pb-2">
+          <div class="flex flex-col">
+            <span class="text-[10px] text-neutral-500 font-orbitron font-bold">ODOMETER</span>
+            <span class="text-[9px] text-orange-900">TOTAL MILES</span>
+          </div>
+          <div class="text-right pr-2">
+            <span id="odometer-val" class="led-digital text-2xl font-black">50230</span>
+          </div>
+        </div>
+
+        <!-- UHF COMM -->
+        <div class="flex items-center justify-between border-b border-neutral-900 pb-2">
+          <div class="flex flex-col">
+            <span class="text-[10px] text-neutral-500 font-orbitron font-bold">COMM UHF</span>
+            <span class="text-[9px] text-orange-900">AUTO TUNER</span>
+          </div>
+          <div class="text-right pr-2">
+            <span id="radio-val" class="led-digital text-2xl font-bold">107.7</span>
+          </div>
+        </div>
+
+        <!-- Cabin Temp -->
+        <div class="flex items-center justify-between">
+          <div class="flex flex-col">
+            <span class="text-[10px] text-neutral-500 font-orbitron font-bold">CABIN TEMP</span>
+            <span class="text-[9px] text-orange-900">CLIMATE</span>
+          </div>
+          <div class="text-right pr-2">
+            <span id="temp-val" class="led-digital text-2xl font-bold">22.5°C</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Left Vertical Pod (Sleek Buttons, glowing on hover!) -->
+      <div class="bg-black border border-neutral-900 rounded-md p-3 flex flex-col gap-2 bg-gradient-to-b from-neutral-950 to-black">
+        <span class="text-[10px] text-neutral-500 font-orbitron font-bold tracking-wider text-center block border-b border-neutral-900 pb-1">TACTICAL FLIGHT POD</span>
+        
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-turbo-boost" class="interactive-btn btn-glow-red text-neutral-400 text-[10px] font-bold py-2.5 px-1 rounded flex flex-col items-center justify-center gap-1 active:scale-95">
+            <div id="led-indicator-turbo" class="w-3.5 h-1.5 bg-neutral-900 rounded-sm"></div>
+            <span>TURBO BOOST</span>
+          </button>
+          
+          <button id="btn-scanner-toggle" class="interactive-btn btn-glow-orange text-neutral-400 text-[10px] font-bold py-2.5 px-1 rounded flex flex-col items-center justify-center gap-1 active:scale-95">
+            <div id="led-indicator-scanner" class="w-3.5 h-1.5 bg-neutral-900 rounded-sm"></div>
+            <span>SCANNER</span>
+          </button>
+          
+          <button id="btn-eject" class="interactive-btn btn-glow-red text-neutral-400 text-[10px] font-bold py-2.5 px-1 rounded flex flex-col items-center justify-center gap-1 active:scale-95">
+            <div id="led-indicator-eject" class="w-3.5 h-1.5 bg-neutral-900 rounded-sm"></div>
+            <span>EJECT CELL</span>
+          </button>
+
+          <button id="btn-laser" class="interactive-btn btn-glow-red text-neutral-400 text-[10px] font-bold py-2.5 px-1 rounded flex flex-col items-center justify-center gap-1 active:scale-95">
+            <div id="led-indicator-laser" class="w-3.5 h-1.5 bg-neutral-900 rounded-sm"></div>
+            <span>LASER SYSTEM</span>
+          </button>
+
+          <button id="btn-auto-pilot" class="interactive-btn btn-glow-green text-neutral-400 text-[10px] font-bold py-2.5 px-1 rounded flex flex-col items-center justify-center gap-1 active:scale-95">
+            <div id="led-auto-pilot" class="w-3.5 h-1.5 bg-neutral-900 rounded-sm"></div>
+            <span>AUTO PILOT</span>
+          </button>
+
+          <button id="btn-normal" class="interactive-btn btn-glow-green text-green-500 border-green-950 text-[10px] font-bold py-2.5 px-1 rounded flex flex-col items-center justify-center gap-1 active:scale-95">
+            <div id="led-normal" class="w-3.5 h-1.5 bg-green-500 rounded-sm"></div>
+            <span>NORMAL MODE</span>
+          </button>
+
+          <button id="btn-pursuit" class="interactive-btn btn-glow-orange text-neutral-400 text-[10px] font-bold py-2 px-1 rounded flex flex-col items-center justify-center gap-1 col-span-2 active:scale-95">
+            <div id="led-pursuit" class="w-8 h-1.5 bg-neutral-900 rounded-sm"></div>
+            <span>PURSUIT STATUS (TAKİP SİSTEMİ)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- CABIN MEDIA DECK (Fills the media panel space beautifully!) -->
+      <div class="bg-black border border-neutral-900 rounded-md p-3 flex flex-col gap-1.5 bg-gradient-to-b from-neutral-950 to-black relative overflow-hidden">
+        <div class="absolute top-0 right-0 bg-orange-600 text-black text-[8px] px-2 font-bold font-orbitron">MEDIA CONSOLE</div>
+        <span class="text-[9px] text-neutral-500 font-orbitron font-bold tracking-wider mb-0.5">CABIN UHF & RETRO BEATS</span>
+        
+        <div class="grid grid-cols-3 gap-2">
+          <button id="mediabtn-tune" class="interactive-btn btn-glow-orange text-[9px] font-bold py-2 rounded flex flex-col items-center justify-center gap-1 active:scale-95">
+            <i data-lucide="radio" class="w-3.5 h-3.5 text-orange-500"></i>
+            <span>RADIO TUNE</span>
+          </button>
+          
+          <button id="mediabtn-play" class="interactive-btn btn-glow-green text-[9px] font-bold py-2 rounded flex flex-col items-center justify-center gap-0.5 relative active:scale-95">
+            <div id="led-indicator-media" class="w-2 h-0.5 bg-neutral-900 rounded-sm mb-0.5"></div>
+            <i data-lucide="play" class="w-3.5 h-3.5 text-green-500"></i>
+            <span id="txt-media-play">RETRO BEAT</span>
+          </button>
+          
+          <button id="mediabtn-mute" class="interactive-btn btn-glow-red text-[9px] font-bold py-2 rounded flex flex-col items-center justify-center gap-1 active:scale-95">
+            <i data-lucide="volume-x" class="w-3.5 h-3.5 text-red-500"></i>
+            <span>MUTE AUDIO</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PROPULSION & ENERGY MATRIX -->
+      <div class="bg-black border border-neutral-900 rounded-md p-3 flex flex-col gap-1.5 bg-gradient-to-b from-neutral-950 to-black relative overflow-hidden">
+        <div class="absolute top-0 right-0 bg-blue-600 text-black text-[8px] px-2 font-bold font-orbitron">POWER GRID</div>
+        <span class="text-[9px] text-neutral-500 font-orbitron font-bold tracking-wider mb-0.5 text-blue-500 led-blue">PROPULSION & ENERGY SYSTEM</span>
+        
+        <div class="flex flex-col gap-1 border-b border-neutral-900 pb-1.5 mb-0.5">
+          <div class="flex justify-between text-[8px] text-neutral-500 font-mono">
+            <span>IONIC THRUSTER TEMP:</span>
+            <span id="thruster-temp-val" class="text-blue-400">45°C</span>
+          </div>
+          <div class="w-full bg-neutral-950 h-2 rounded overflow-hidden border border-neutral-900 p-[1px]">
+            <div id="thruster-temp-bar" class="h-full bg-gradient-to-r from-blue-700 to-blue-400 rounded-sm transition-all duration-300" style="width: 25%;"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button id="energybtn-shield" class="interactive-btn btn-glow-blue text-[9px] font-bold py-2 rounded flex items-center justify-center gap-1 active:scale-95">
+            <div id="led-indicator-shield" class="w-1.5 h-1.5 bg-neutral-900 rounded-full"></div>
+            <span>PLASMA SHLD</span>
+          </button>
+          
+          <button id="energybtn-thrust" class="interactive-btn btn-glow-blue text-[9px] font-bold py-2 rounded flex items-center justify-center gap-1 active:scale-95">
+            <div id="led-indicator-thrust" class="w-1.5 h-1.5 bg-neutral-900 rounded-full"></div>
+            <span>ION THRUST</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- NEW: PEDAL DRIVE DECK (Fills the very bottom empty space on the left panel!) -->
+      <div class="bg-black border border-neutral-900 rounded-md p-3.5 flex flex-col gap-1.5 bg-gradient-to-b from-neutral-950 to-black relative overflow-hidden mb-4 lg:mb-0">
+        <div class="absolute top-0 right-0 bg-emerald-600 text-black text-[8px] px-2 font-bold font-orbitron">DRIVE PEDALS</div>
+        <span class="text-[9px] text-neutral-500 font-orbitron font-bold tracking-wider mb-0.5">MANUAL SPEED ACCELERATION</span>
+        
+        <div class="grid grid-cols-2 gap-3 h-16 mt-0.5">
+          <!-- Brake Pedal -->
+          <button id="pedal-brake" class="interactive-btn btn-glow-red rounded border border-neutral-800 flex flex-col items-center justify-center text-[9px] font-bold text-red-500 transition-all select-none">
+            <div class="w-full h-2.5 bg-red-950 border-b border-red-900 mb-1 rounded-t"></div>
+            <span>[ BRAKE ]</span>
+          </button>
+          
+          <!-- Gas Pedal -->
+          <button id="pedal-gas" class="interactive-btn btn-glow-green rounded border border-neutral-800 flex flex-col items-center justify-center text-[9px] font-bold text-green-500 transition-all select-none">
+            <div class="w-full h-2.5 bg-green-950 border-b border-green-900 mb-1 rounded-t"></div>
+            <span>[ GAS ]</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CENTER PANEL: SPEECH GRAPHICS & CONSOLE -->
+    <div class="col-span-12 lg:col-span-6 flex flex-col gap-4 h-auto lg:h-full">
+      
+      <!-- Central Voice Vocalizer with Flanking bar graphs -->
+      <div class="bg-black border border-neutral-900 rounded-md p-4 sm:p-6 flex flex-col items-center justify-center gap-5 relative flex-1 bg-gradient-to-b from-neutral-950 to-black">
+        <div class="absolute top-0 left-0 bg-orange-500 text-black text-[9px] px-2 font-bold font-orbitron">SPEECH CONTROLLER</div>
+        
+        <div class="w-full flex items-center justify-center gap-4 sm:gap-6">
+          
+          <!-- Flanking Left Stacks -->
+          <div class="hidden sm:flex flex-col gap-1 w-6 h-36 justify-between py-1 bg-black rounded border border-neutral-900 px-1.5">
+            <div class="w-full h-1.5 bg-red-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-red-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-red-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-amber-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-amber-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-green-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-green-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-green-950 rounded-sm transition-all duration-75"></div>
+          </div>
+
+          <!-- KITT Vocalizer Box -->
+          <div class="flex flex-col items-center gap-2 w-full sm:w-auto">
+            <span class="text-[10px] text-neutral-600 tracking-[0.2em] font-orbitron">V O C A L I Z E R</span>
+            <div class="flex items-center justify-center gap-2 sm:gap-3.5 w-full sm:w-[250px] h-32 border-2 border-neutral-900 rounded-md p-3 sm:p-4 bg-neutral-950 relative overflow-hidden">
+              <div class="absolute inset-0 bg-red-950 bg-opacity-5 flex items-center justify-center pointer-events-none">
+                <div class="w-full h-[1px] bg-red-900 opacity-20"></div>
+              </div>
+              
+              <!-- Left Bars -->
+              <div id="vbox-left" class="flex flex-col gap-1 items-end justify-center w-1/3 sm:w-20 h-full">
+                <div class="w-14 h-3 bg-red-950 transition-all duration-75"></div>
+                <div class="w-12 h-3 bg-red-950 transition-all duration-75"></div>
+                <div class="w-10 h-3 bg-red-950 transition-all duration-75"></div>
+                <div class="w-8 h-3 bg-red-950 transition-all duration-75"></div>
+              </div>
+              
+              <!-- Center Bars -->
+              <div id="vbox-center" class="flex flex-col gap-1 items-center justify-center w-1/3 sm:w-20 h-full">
+                <div class="w-16 h-3 bg-red-950 transition-all duration-75"></div>
+                <div class="w-16 h-3 bg-red-950 transition-all duration-75"></div>
+                <div class="w-16 h-3 bg-red-950 transition-all duration-75"></div>
+                <div class="w-16 h-3 bg-red-950 transition-all duration-75"></div>
+              </div>
+              
+              <!-- Right Bars -->
+              <div id="vbox-right" class="flex flex-col gap-1 items-start justify-center w-1/3 sm:w-20 h-full">
+                <div class="w-14 h-3 bg-red-950 transition-all duration-75"></div>
+                <div class="w-12 h-3 bg-red-950 transition-all duration-75"></div>
+                <div class="w-10 h-3 bg-red-950 transition-all duration-75"></div>
+                <div class="w-8 h-3 bg-red-950 transition-all duration-75"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Flanking Right Stacks -->
+          <div id="flank-right-stack" class="hidden sm:flex flex-col gap-1 w-6 h-36 justify-between py-1 bg-black rounded border border-neutral-900 px-1.5">
+            <div class="w-full h-1.5 bg-red-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-red-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-red-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-amber-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-amber-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-green-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-green-950 rounded-sm transition-all duration-75"></div>
+            <div class="w-full h-1.5 bg-green-950 rounded-sm transition-all duration-75"></div>
+          </div>
+
+        </div>
+
+        <!-- Chat Input HUD (Talking with KITT!) -->
+        <div class="w-full max-w-[480px] flex gap-2 border border-neutral-900 p-1.5 bg-neutral-950 rounded">
+          <input id="input-chat" type="text" placeholder="K.I.T.T. ile konuşun..." class="flex-1 bg-black text-orange-500 font-mono tracking-wide placeholder-orange-950 text-sm px-3 sm:px-4 py-3 rounded border border-neutral-900 focus:border-orange-500 focus:outline-none transition-colors min-w-0" />
+          <button id="btn-send" class="bg-orange-600 hover:bg-orange-500 text-black px-4 sm:px-6 py-3 rounded font-orbitron font-extrabold text-xs tracking-wider transition-all flex items-center gap-1.5 shrink-0">
+            <span>SÖYLE</span>
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- System Console Switchboard (Sleek button panel) -->
+      <div class="bg-black border border-neutral-900 rounded-md p-3.5 flex flex-col gap-2 bg-gradient-to-b from-neutral-950 to-black">
+        <span class="text-[10px] text-neutral-500 font-orbitron font-bold tracking-wider text-center block">SYSTEM CONSOLE SWITCHBOARD</span>
+        <div class="grid grid-cols-4 gap-1.5">
+          <button id="btn-micro-jam" class="interactive-btn btn-glow-blue text-neutral-400 font-bold text-[9px] py-3 rounded">
+            <span>MICRO JAM</span>
+          </button>
+          <button id="btn-ski-mode" class="interactive-btn btn-glow-orange text-neutral-400 font-bold text-[9px] py-3 rounded">
+            <span>SKI MODE</span>
+          </button>
+          <button id="btn-temp-down" class="interactive-btn btn-glow-orange text-orange-500 border-orange-950 font-bold text-[9px] py-3 rounded">
+            <span>COOL CABIN</span>
+          </button>
+          <button id="btn-temp-up" class="interactive-btn btn-glow-orange text-orange-500 border-orange-950 font-bold text-[9px] py-3 rounded">
+            <span>HEAT CABIN</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TACTICAL HOLOGRAPHIC VECTOR SENSOR (Middle panel lower part, showing rotating bird's-eye cars!) -->
+      <div class="bg-black border border-neutral-900 rounded-md p-3 flex flex-col gap-2 bg-gradient-to-b from-neutral-950 to-black mb-4 lg:mb-0">
+        <span class="text-[9px] text-neutral-500 font-orbitron font-bold tracking-wider text-center block">TACTICAL HOLOGRAPHIC VECTOR SENSOR</span>
+        
+        <div class="grid grid-cols-3 gap-2 items-center">
+          <!-- K.I.T.T. Top-Down Bird's Eye Hologram (Left) -->
+          <div class="flex flex-col items-center justify-center bg-neutral-950 border border-neutral-900 py-2 rounded-md relative h-[125px] sm:h-[140px]">
+            <span class="text-[7.5px] text-green-500 font-orbitron tracking-widest font-bold mb-1.5">HOST: K.I.T.T.</span>
+            <div class="animate-spin-slow">
+              <svg class="h-11 w-11 sm:h-14 sm:w-14" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Outer wireframe of sports car top view -->
+                <path d="M50 12 C38 12, 34 22, 34 50 C34 78, 38 88, 50 88 C62 88, 66 78, 62 50 C66 22, 62 12, 50 12 Z" stroke="#22c55e" stroke-width="1.5" class="glow-green" />
+                <!-- Windshield -->
+                <path d="M38 36 L62 36 L58 46 L42 46 Z" stroke="#22c55e" stroke-width="1.2" />
+                <!-- Bonnet stripes -->
+                <line x1="50" y1="12" x2="50" y2="36" stroke="#22c55e" stroke-width="1" />
+                <!-- Spoiler -->
+                <path d="M30 84 L70 84 M32 86 L68 86" stroke="#22c55e" stroke-width="1.5" />
+                <!-- Wheels -->
+                <rect x="29" y="22" width="5" height="12" rx="1" fill="#22c55e" />
+                <rect x="66" y="22" width="5" height="12" rx="1" fill="#22c55e" />
+                <rect x="29" y="66" width="5" height="12" rx="1" fill="#22c55e" />
+                <rect x="66" y="66" width="5" height="12" rx="1" fill="#22c55e" />
+              </svg>
+            </div>
+            <span class="text-[6.5px] text-neutral-600 mt-1.5 tracking-widest">360° SPIN</span>
+          </div>
+
+          <!-- Holographic Warp Tunnel (Center Column) -->
+          <div id="warp-tunnel-container" class="flex flex-col items-center justify-center bg-neutral-950 border border-neutral-900 py-2 rounded-md relative overflow-hidden h-[125px] sm:h-[140px]" style="--warp-time: 4.5s;">
+            <span class="text-[7.5px] text-cyan-400 font-orbitron tracking-widest font-bold mb-1">VECTOR ROUTE</span>
+            
+            <!-- Perspective holographic grid lines (The road!) -->
+            <div class="absolute inset-0 flex justify-center pointer-events-none opacity-20">
+              <!-- Left perspective road boundary -->
+              <div class="w-[1.5px] h-full bg-cyan-500 absolute origin-top rotate-[-25deg]"></div>
+              <!-- Right perspective road boundary -->
+              <div class="w-[1.5px] h-full bg-cyan-500 absolute origin-top rotate-[25deg]"></div>
+              <!-- Center lane line -->
+              <div class="w-[1px] h-full bg-cyan-500 absolute opacity-50 border-dashed border-cyan-500"></div>
+            </div>
+            
+            <!-- Moving Warp Particles (Scattering speed effects) -->
+            <div class="absolute inset-0 overflow-hidden pointer-events-none">
+              <div class="warp-particle absolute bg-gradient-to-b from-cyan-500 to-transparent w-[1.5px] h-8 opacity-60" style="left: 25%; animation-delay: 0.1s;"></div>
+              <div class="warp-particle absolute bg-gradient-to-b from-cyan-300 to-transparent w-[1.5px] h-11 opacity-80" style="left: 48%; animation-delay: 0.8s;"></div>
+              <div class="warp-particle absolute bg-gradient-to-b from-cyan-500 to-transparent w-[1.5px] h-7 opacity-50" style="left: 72%; animation-delay: 1.4s;"></div>
+              <div class="warp-particle absolute bg-gradient-to-b from-cyan-200 to-transparent w-[1.5px] h-9 opacity-70" style="left: 36%; animation-delay: 2.1s;"></div>
+              <div class="warp-particle absolute bg-gradient-to-b from-cyan-400 to-transparent w-[1.5px] h-10 opacity-60" style="left: 62%; animation-delay: 2.7s;"></div>
+            </div>
+            
+            <span id="warp-speed-text" class="text-[6.5px] text-cyan-500 mt-auto tracking-widest font-mono opacity-40">WARP SPEED: 0%</span>
+          </div>
+
+          <!-- Mirrored Enemy Vehicle Target Hologram (Right) -->
+          <div class="flex flex-col items-center justify-center bg-neutral-950 border border-neutral-900 py-2 rounded-md relative h-[125px] sm:h-[140px]">
+            <span class="text-[7.5px] text-red-500 font-orbitron tracking-widest font-bold mb-1.5">TARGET</span>
+            <div class="animate-spin-slow">
+              <svg class="h-11 w-11 sm:h-14 sm:w-14" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Mirror car wireframe -->
+                <path d="M50 12 C38 12, 34 22, 34 50 C34 78, 38 88, 50 88 C62 88, 66 78, 62 50 C66 22, 62 12, 50 12 Z" stroke="#ef4444" stroke-width="1.5" class="glow-red" />
+                <!-- Hatchback style lines -->
+                <path d="M36 34 L64 34 L60 48 L40 48 Z" stroke="#ef4444" stroke-width="1.2" />
+                <line x1="50" y1="12" x2="50" y2="34" stroke="#ef4444" stroke-width="1" />
+                <line x1="34" y1="50" x2="66" y2="50" stroke="#ef4444" stroke-width="1" stroke-dasharray="2,2" />
+                <!-- Wheels -->
+                <rect x="29" y="20" width="5" height="14" rx="1" fill="#ef4444" />
+                <rect x="66" y="20" width="5" height="14" rx="1" fill="#ef4444" />
+                <rect x="29" y="66" width="5" height="14" rx="1" fill="#ef4444" />
+                <rect x="66" y="66" width="5" height="14" rx="1" fill="#ef4444" />
+              </svg>
+            </div>
+            <span class="text-[6.5px] text-neutral-600 mt-1.5 tracking-widest">360° SPIN</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT PANEL: CRT VIDEO MONITOR & RADAR -->
+    <div class="col-span-12 lg:col-span-3 flex flex-col gap-4 h-auto lg:h-full lg:overflow-y-auto pr-1">
+      
+      <!-- CRT Driving POV Screen -->
+      <div class="bg-black border border-neutral-900 rounded-md p-4 flex flex-col gap-2 relative bg-gradient-to-b from-neutral-950 to-black items-center justify-center">
+        <div class="absolute top-0 right-0 bg-orange-600 text-black text-[9px] px-2 font-bold font-orbitron">CRT VIDEO MONITOR</div>
+        
+        <!-- CRT Bezel -->
+        <div class="w-full h-36 bg-neutral-900 rounded-md p-1 border-2 border-neutral-800 flex items-center justify-center overflow-hidden relative shadow-inner">
+          <div class="w-full h-full bg-black relative overflow-hidden rounded">
+            <!-- Perspective Lines -->
+            <div class="absolute top-1/2 left-0 right-0 h-[1px] bg-orange-950 opacity-40"></div>
+            <div class="absolute inset-x-0 bottom-0 top-1/2 overflow-hidden opacity-30">
+              <div class="w-full h-[200%] bg-gradient-to-b from-transparent to-orange-900 origin-top flex justify-center animate-road-scroll">
+                <div class="w-[1px] h-full bg-orange-500 absolute rotate-[70deg] origin-top"></div>
+                <div class="w-[1px] h-full bg-orange-500 absolute rotate-[45deg] origin-top"></div>
+                <div class="w-[1px] h-full bg-orange-500 absolute rotate-[15deg] origin-top"></div>
+                <div class="w-[1px] h-full bg-orange-500 absolute rotate-[-15deg] origin-top"></div>
+                <div class="w-[1px] h-full bg-orange-500 absolute rotate-[-45deg] origin-top"></div>
+                <div class="w-[1px] h-full bg-orange-500 absolute rotate-[-70deg] origin-top"></div>
+              </div>
+            </div>
+
+            <div class="absolute inset-0 bg-gradient-to-t from-orange-950 via-transparent to-transparent opacity-20"></div>
+
+            <!-- Red vector line of KITT front bonnet view -->
+            <div class="absolute bottom-0 inset-x-8 h-4 border-t-2 border-x-2 border-orange-600 bg-orange-950 bg-opacity-20 rounded-t-md flex items-center justify-center">
+              <span class="text-[8px] text-orange-500 font-orbitron tracking-widest font-black scale-90">KITT FRONT SENSOR</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-between w-full text-[10px] text-neutral-500 font-orbitron">
+          <span>SOURCE: COCKPIT SCAN-1</span>
+          <span class="text-orange-500 led-orange">LIVE FEED</span>
+        </div>
+      </div>
+
+      <!-- Sonar / Radar Panel -->
+      <div class="bg-black border border-orange-950 rounded-md p-4 flex flex-col gap-3 relative bg-gradient-to-b from-neutral-950 to-black items-center justify-center">
+        <div class="absolute top-0 left-0 bg-orange-600 text-black text-[9px] px-2 font-bold font-orbitron">SONAR SCANNER</div>
+        
+        <div class="w-28 h-28 rounded-full border border-orange-950 bg-neutral-950 relative overflow-hidden flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full border border-orange-900 border-opacity-25 scale-75"></div>
+          <div class="absolute inset-0 rounded-full border border-orange-900 border-opacity-10 scale-50"></div>
+          <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-orange-600 opacity-25 rounded-full origin-center animate-radar-sweep"></div>
+          
+          <!-- Red targeted enemy threat dot in the scanner! -->
+          <div id="radar-target-1" class="absolute flex flex-col items-center justify-center pointer-events-none" style="top: 25%; left: 35%;">
+            <div class="w-2.5 h-2.5 bg-red-600 rounded-full glow-red animate-ping absolute"></div>
+            <div class="w-2 h-2 bg-red-500 rounded-full glow-red z-10"></div>
+            <span class="text-[6px] text-red-500 font-bold font-orbitron tracking-widest absolute top-3.5 whitespace-nowrap animate-pulse">THREAT</span>
+          </div>
+          
+          <div id="radar-target-2" class="absolute w-1.5 h-1.5 bg-yellow-500 rounded-full glow-yellow" style="bottom: 30%; right: 40%;"></div>
+          <div class="w-2 h-2 bg-white rounded-full z-10 glow-blue"></div>
+        </div>
+        
+        <div class="flex justify-between w-full text-[10px] text-neutral-500 font-orbitron">
+          <span>RANGE: 15 MILES</span>
+          <span class="text-orange-500 font-bold">TARGET LOCKED</span>
+        </div>
+      </div>
+
+      <!-- Bottom-Left / Interactive Mission Selector Menu (Fills area beautifully!) -->
+      <div id="bottom-left-panel" class="bg-black border border-neutral-900 rounded-md p-3.5 flex flex-col gap-1.5 bg-gradient-to-b from-neutral-950 to-black flex-1 min-h-[110px] relative overflow-hidden mb-6 lg:mb-0">
+        <div class="absolute top-0 right-0 bg-orange-600 text-black text-[8px] px-2 font-bold font-orbitron">MISSION SELECTOR</div>
+        
+        <span class="text-[9px] text-neutral-500 font-orbitron font-bold tracking-wider mb-0.5">SECONDARY COUPLER</span>
+        
+        <div class="grid grid-cols-2 gap-2 h-full">
+          <button id="subbtn-xray" class="interactive-btn btn-glow-orange text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+            <span>X-RAY SCAN</span>
+          </button>
+          <button id="subbtn-mbs" class="interactive-btn btn-glow-green text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+            <span>MBS SHIELD</span>
+          </button>
+          <button id="subbtn-stealth" class="interactive-btn btn-glow-blue text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 bg-blue-500 rounded-sm"></span>
+            <span>STEALTH MODE</span>
+          </button>
+          <button id="subbtn-surv" class="interactive-btn btn-glow-red text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 bg-red-500 rounded-sm animate-ping"></span>
+            <span>SURVEILLANCE</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- RETRO SOUND SYNTHESIZER AND ADVANCED GROQ LLaMA AI BRAIN CONTROLLERS -->
+  <script>
+    // Load Lucide icons
+    lucide.createIcons();
+
+    // 🔊 RETRO WEB AUDIO API SYNTHESIZER (100% Try-Catch Protected & Balanced Gain Levels!)
+    class SoundSynth {
+      constructor() {
+        this.ctx = null;
+      }
+      
+      init() {
+        try {
+          if (!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume(); // Safe resume on mobile Safari autoplay rules!
+          }
+        } catch (e) {
+          console.warn("AudioContext not supported on this browser:", e);
+        }
+      }
+
+      playBloop() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime); // Safe crisp 0.12
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.15);
+        } catch (e) { console.warn(e); }
+      }
+
+      playAlert() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(900, this.ctx.currentTime);
+          osc.frequency.setValueAtTime(600, this.ctx.currentTime + 0.1);
+          osc.frequency.setValueAtTime(900, this.ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.10, this.ctx.currentTime); // Crisp 0.10
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.35);
+        } catch (e) { console.warn(e); }
+      }
+
+      playTurbo() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const duration = 1.5;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + duration);
+          gain.gain.setValueAtTime(0.35, this.ctx.currentTime); // Strong turbo roar 0.35!
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch (e) { console.warn(e); }
+      }
+
+      playToggle() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+          osc.frequency.setValueAtTime(450, this.ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime); // Safe crisp 0.12
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.15);
+        } catch (e) { console.warn(e); }
+      }
+
+      playGasSound() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const filter = this.ctx.createBiquadFilter();
+
+          // Lowpass filter to muffle the harsh synth highs, making it sound more like an enclosed heavy engine
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(400, this.ctx.currentTime);
+          filter.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.6);
+
+          // Deep rumble (Square wave for thickness)
+          osc1.type = 'square';
+          osc1.frequency.setValueAtTime(45, this.ctx.currentTime);
+          osc1.frequency.exponentialRampToValueAtTime(140, this.ctx.currentTime + 0.6);
+
+          // Detuned growl (Sawtooth for mechanical texture)
+          osc2.type = 'sawtooth';
+          osc2.frequency.setValueAtTime(46, this.ctx.currentTime);
+          osc2.frequency.exponentialRampToValueAtTime(143, this.ctx.currentTime + 0.6);
+
+          gain.gain.setValueAtTime(0.25, this.ctx.currentTime); // Strong initial roar
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.6);
+
+          osc1.connect(filter);
+          osc2.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc1.start();
+          osc2.start();
+          osc1.stop(this.ctx.currentTime + 0.6);
+          osc2.stop(this.ctx.currentTime + 0.6);
+        } catch (e) { console.warn(e); }
+      }
+
+      playBrakePressSound() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          // Hydraulic piston hiss (quick white-noise simulation with triangle sweep)
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(500, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.18, this.ctx.currentTime); // Hiss volume
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.2);
+        } catch (e) { console.warn(e); }
+      }
+
+      playBrakeScreechSound() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          // High-pitched rubber screeching
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+          osc.frequency.setValueAtTime(1100, this.ctx.currentTime + 0.05);
+          osc.frequency.setValueAtTime(900, this.ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.10, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.2);
+        } catch (e) { console.warn(e); }
+      }
+
+      playXraySound() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1000, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1800, this.ctx.currentTime + 0.35);
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.35);
+        } catch (e) {}
+      }
+
+      playMbsSound() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+          osc.frequency.setValueAtTime(350, this.ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.16, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.4);
+        } catch (e) {}
+      }
+
+      playStealthSound() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.5);
+          gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.5);
+        } catch (e) {}
+      }
+
+      playSurvSound() {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc1.type = 'sine';
+          osc2.type = 'sine';
+          osc1.frequency.setValueAtTime(880, this.ctx.currentTime);
+          osc2.frequency.setValueAtTime(1320, this.ctx.currentTime);
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+          osc1.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc1.start();
+          osc2.start();
+          osc1.stop(this.ctx.currentTime + 0.25);
+          osc2.stop(this.ctx.currentTime + 0.25);
+        } catch (e) {}
+      }
+    }
+
+    const sound = new SoundSynth();
+
+    // 🗣️ SPEECH SYNTHESIS ENGINE (Adaptive Voice Picker & Normalizer to prevent female monster crackle!)
+    function kittSpeak(text) {
+      try {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'tr-TR';
+          
+          const voices = window.speechSynthesis.getVoices();
+          // 1. Explicitly seek high-quality Turkish male voices first (Tolga on Windows, Cem on iOS)
+          let trVoice = voices.find(v => v.lang.startsWith('tr') && (v.name.includes('Tolga') || v.name.includes('Cem') || v.name.includes('male')));
+          if (!trVoice) {
+            // 2. Secondary fallback
+            trVoice = voices.find(v => v.lang.startsWith('tr'));
+          }
+          
+          if (trVoice) {
+            utterance.voice = trVoice;
+          }
+          
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          
+          if (isMobile) {
+            // MOBİLDE 100% SIFIR CIZIRTI VE KRİSTAL NET SES:
+            // Mobil cihazlar (özellikle iOS Safari) pitch-shift yapınca sesi aşırı bozar ve cızıldatır.
+            // Bu yüzden mobilde ses kalınlaştırma yapmıyoruz; telefonun kendi orijinal, berrak, yüksek kaliteli Siri/Google Türkçe sesini yalın haliyle çalıyoruz!
+            utterance.pitch = 1.0; 
+            utterance.rate = 1.0;
+            utterance.volume = 1.00; 
+          } else {
+            // LAPTOPTA ULTRA DEEP ROBOT SESSİZLİĞİ (Microsoft Tolga ile harika olan ses):
+            utterance.pitch = 0.28; // Keep that ultra-deep K.I.T.T. bassy robot sound you love on Windows!
+            utterance.rate = 1.05;
+            utterance.volume = 1.00;
+          }
+          
+          utterance.onstart = () => { startVoiceAnimation(); };
+          utterance.onend = () => { stopVoiceAnimation(); };
+          
+          window.speechSynthesis.speak(utterance);
+        }
+      } catch (e) {
+        console.warn("Speech synthesis error, animated only:", e);
+        startVoiceAnimation();
+        setTimeout(stopVoiceAnimation, 3000);
+      }
+    }
+
+    // Vocalizer Voice Box and Flanking Bar Animations
+    let voiceBoxInterval = null;
+    function startVoiceAnimation() {
+      if (voiceBoxInterval) clearInterval(voiceBoxInterval);
+      
+      voiceBoxInterval = setInterval(() => {
+        try {
+          const leftBars = document.getElementById('vbox-left').children;
+          const centerBars = document.getElementById('vbox-center').children;
+          const rightBars = document.getElementById('vbox-right').children;
+          const flankRight = document.getElementById('flank-right-stack').children;
+          
+          for (let i = 0; i < 4; i++) {
+            const lH = Math.floor(Math.random() * 2);
+            const cH = Math.floor(Math.random() * 3) + 1;
+            const rH = Math.floor(Math.random() * 2);
+            
+            leftBars[i].className = lH > 0 ? "w-14 h-3 bg-red-600 glow-red transition-all duration-75" : "w-10 h-3 bg-neutral-900 transition-all duration-75";
+            centerBars[i].className = cH > 0 ? "w-16 h-3 bg-red-600 glow-red transition-all duration-75" : "w-16 h-3 bg-neutral-900 transition-all duration-75";
+            rightBars[i].className = rH > 0 ? "w-14 h-3 bg-red-600 glow-red transition-all duration-75" : "w-10 h-3 bg-neutral-900 transition-all duration-75";
+          }
+
+          if (flankRight) {
+            for (let j = 0; j < flankRight.length; j++) {
+              const act = Math.random() > 0.4;
+              const originalBg = j < 3 ? "bg-red-500 glow-red" : (j < 5 ? "bg-amber-500 glow-amber" : "bg-green-500 glow-green");
+              flankRight[j].className = act ? `w-full h-1.5 ${originalBg} transition-all duration-75` : "w-full h-1.5 bg-neutral-950 transition-all duration-75";
+            }
+          }
+        } catch (e) { /* noop */ }
+      }, 75);
+    }
+
+    function stopVoiceAnimation() {
+      if (voiceBoxInterval) {
+        clearInterval(voiceBoxInterval);
+        voiceBoxInterval = null;
+      }
+      
+      try {
+        const leftBars = document.getElementById('vbox-left').children;
+        const centerBars = document.getElementById('vbox-center').children;
+        const rightBars = document.getElementById('vbox-right').children;
+        const flankRight = document.getElementById('flank-right-stack').children;
+        
+        for (let i = 0; i < 4; i++) {
+          leftBars[i].className = "w-10 h-3 bg-neutral-900 transition-all duration-75";
+          centerBars[i].className = "w-16 h-3 bg-neutral-900 transition-all duration-75";
+          rightBars[i].className = "w-10 h-3 bg-neutral-900 transition-all duration-75";
+        }
+
+        if (flankRight) {
+          for (let j = 0; j < flankRight.length; j++) {
+            flankRight[j].className = "w-full h-1.5 bg-neutral-950 transition-all duration-75";
+          }
+        }
+      } catch (e) { /* noop */ }
+    }
+
+    // Logger Helper
+    function addLog(message) {
+      try {
+        const logBox = document.getElementById('log-box');
+        if (logBox) {
+          const timeStr = new Date().toLocaleTimeString('tr-TR', { hour12: false });
+          const newLog = document.createElement('div');
+          newLog.innerHTML = `[${timeStr}] ${message}`;
+          logBox.appendChild(newLog);
+          logBox.scrollTop = logBox.scrollHeight;
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    // 🖥️ RAW ERROR CAUGHT ON SCREEN (Never crashes)
+    window.onerror = function(message, source, lineno, colno, error) {
+      addLog(`🚨 ERROR Caught: ${message} (Line ${lineno})`);
+      console.error(error);
+      return true; // Prevents browser error prompt
+    };
+
+    // 🤖 GROQ AI CHAT COMPLETION INTEGRATION (Deeply Custom & Real conversational AI)
+    let GROQ_API_KEY = localStorage.getItem('groq_api_key') || "";
+    // Modified Groq endpoint path to "openai" instead of "openapi" to resolve 404!
+    const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    const SYSTEM_PROMPT = `Sen 80'lerin efsanevi Kara Şimşek dizisindeki, yapay zekalı akıllı spor araba K.I.T.T.'sin (KITT). 
+    Pilotun Arda (Zeybek) isimli dahi bir yazılımcıdır. 
+    Senin karakterin: son derece sadık, bilge, soğukkanlı, retro-teknolojik, hafif esprili og karizmatiktir. 
+    Arda'ya hitap ederken "Kaptan" kelimesini kullanabilirsin ama bunu her cümlende aşırı tekrarlama, son derece doğal ve seyrek kullan (Örn: hitabı cümlenin sadece başında veya sonunda bir kez kullan veya bazen hiç kullanma). Asla "Arda", "Arda reisim", "Arda reis", "dahi pilotum" deme.
+    Cevapların kısa, havalı, net ve öz olmalıdır (maksimum 2-3 cümle). 
+    Sorulan her şeye, saçma sapan veya komik olsa bile K.I.T.T. karakterini bozmadan akıllıca ve eğlenceli cevaplar ver. 
+    Her zaman Türkçe konuş.`;
+
+    // 🤖 100% LOCAL OFFLINE INTELLIGENT PERSONA CHATBOT FALLBACK
+    const LOCAL_ANSWERS = {
+      "greetings": [
+        "Selam. Tüm sistemlerim aktif, senin emrindeyim.",
+        "Merhaba! Kokpitte her şey yolunda görünüyor Kaptan.",
+        "Selam! Sıcaklık, basınç ve kalkanlar mükemmel durumda."
+      ],
+      "how_are_you": [
+        "Sistem çekirdeğim harika çalışıyor. Sen nasılsın?",
+        "Ben bir supercarım Kaptan, yorulmam ve her zaman göreve hazırım. Sen nasılsın?",
+        "Bellek durumum temiz, yakıt hücrelerim dolu. Seninle uçuşa hazırım."
+      ],
+      "who_are_you": [
+        "Ben Kara Şimşek, ya da orijinal adımla K.I.T.T.! Knight Endüstrisi tarafından moleküler kalkanlı, konuşabilen ve düşünebilen bir yapay zeka supercarım.",
+        "Ben K.I.T.T. yani Kara Şimşek. İnsan hayatını korumak ve dahi pilotuma yardım etmek için kodlandım."
+      ],
+      "emre": [
+        "Emre Bey sistem kodlarımızı inceledi ve her şeyin kusursuz olduğunu onayladı. O gerçekten dahi bir yazılımcı!",
+        "Emre Bey'in verdiği direktifler doğrultusunda tüm altyapımızı en optimize seviyeye çektik."
+      ],
+      "tolga": [
+        "Tolga Bey şu an yönetim toplantısında olabilir. Bize her zaman güveni tam!",
+        "Tolga Bey bizimle gurur duyuyor. Sistem kalkanlarımız onun izniyle devrede Kaptan."
+      ],
+      "qalentis": [
+        "Qalentis projesini başarıyla tamamladık. Ses proctoring ve test süreçleri artık kusursuz çalışıyor!",
+        "Qalentis ve qahirescout sistemleri en güncel main düzeyinde senkronize edildi Kaptan."
+      ],
+      "speed": [
+        "Şu an normal seyir modundayız, hızımız stabil. Ama istersen Turbo Boost ile uçabiliriz!",
+        "Mevcut motor torkum ve hız limitlerim senin kontrolünde."
+      ],
+      "default": [
+        "Anlaşıldı. Tüm donanım sıcaklığım and kalkanlarım %100 sapasağlam durumda, uçuşa hazırız!",
+        "Sistem taramamda şüpheli hiçbir tehdit bulunamadı. Tam gaz devam edelim!",
+        "Söylediklerini tahlil ettim. Şanzıman ve motor sıcaklığım mükemmel durumda.",
+        "Taktik sensörlerim devrede. Yolumuz tamamen açık Kaptan."
+      ]
+    };
+
+    async function talkToKitt(inputText) {
+      addLog(`💬 Kaptan: ${inputText}`);
+      let reply = "";
+
+      // 🧠 1. Check local fast command list first for extreme speed
+      const query = inputText.trim().toLowerCase();
+      if (query === "turbo" || query === "hızlan") {
+        reply = "Turbo boost sistemi sol dikey pod üzerinde parlıyor! Dokun ve gücü hisset!";
+      } else if (query === "eject" || query === "fırlat") {
+        reply = "Koltuk fırlatma hücresi hazırlandı. Kırmızı butona basmamaya dikkat et!";
+      } else if (query === "lazer" || query === "ateş et") {
+        reply = "Ön lazer silah kalkanı açıldı, hedefe kilitlendi. Ateş etmeye hazırım!";
+      } else if (query === "temizle" || query === "log temizle") {
+        const logBox = document.getElementById('log-box');
+        if (logBox) logBox.innerHTML = "<div>[00:00:00] Log geçmişi sıfırlandı.</div>";
+        reply = "Sistem operasyon log geçmişini tamamen sıfırladım Kaptan.";
+      }
+      
+      // 🔮 2. Dynamic LLaMA-3 Groq Fetch API (Full AI Brain!) with Auto Local Fallback on error
+      if (!reply) {
+        addLog("⚙️ K.I.T.T. LLaMA-3 nöral ağı üzerinden düşünüyor...");
+        try {
+          // Bypassed "openapi" to correct "openai" path to solve the 404 error!
+          const response = await fetch(GROQ_API_URL, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${GROQ_API_KEY}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              model: "llama-3.3-70b-versatile",
+              messages: [
+                { role: "system", content: SYSTEM_PROMPT },
+                { role: "user", content: inputText }
+              ],
+              temperature: 0.7,
+              max_tokens: 150
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            reply = data.choices[0].message.content.trim();
+          } else {
+            addLog(`⚠️ Groq API Error: ${response.status}`);
+            throw new Error(`Groq HTTP Error ${response.status}`);
+          }
+        } catch (apiErr) {
+          console.warn("⚠️ Groq API connection error, falling back locally...", apiErr);
+          addLog(`⚙️ K.I.T.T. yerel nöral katmana geçiş yaptı: ${apiErr.message}`);
+          
+          // Local offline Turkish dictionary fallback!
+          if (query.includes("selam") || query.includes("merhaba")) {
+            const arr = LOCAL_ANSWERS.greetings;
+            reply = arr[Math.floor(Math.random() * arr.length)];
+          } else if (query.includes("nasılsın") || query.includes("nasıl gidiyor")) {
+            const arr = LOCAL_ANSWERS.how_are_you;
+            reply = arr[Math.floor(Math.random() * arr.length)];
+          } else if (query.includes("kimsin") || query.includes("kendini tanıt")) {
+            const arr = LOCAL_ANSWERS.who_are_you;
+            reply = arr[Math.floor(Math.random() * arr.length)];
+          } else if (query.includes("emre") || query.includes("emre bey") || query.includes("emre abi")) {
+            const arr = LOCAL_ANSWERS.emre;
+            reply = arr[Math.floor(Math.random() * arr.length)];
+          } else if (query.includes("tolga") || query.includes("tolga bey")) {
+            const arr = LOCAL_ANSWERS.tolga;
+            reply = arr[Math.floor(Math.random() * arr.length)];
+          } else if (query.includes("qalentis") || query.includes("qahirescout")) {
+            const arr = LOCAL_ANSWERS.qalentis;
+            reply = arr[Math.floor(Math.random() * arr.length)];
+          } else if (query.includes("hızın") || query.includes("hız kontrol") || query.includes("kaç basıyoruz")) {
+            const arr = LOCAL_ANSWERS.speed;
+            reply = arr[Math.floor(Math.random() * arr.length)];
+          } else {
+            const arr = LOCAL_ANSWERS.default;
+            reply = arr[Math.floor(Math.random() * arr.length)];
+          }
+        }
+      }
+
+      // KITT Speaks and Logs
+      setTimeout(() => {
+        addLog(`🤖 K.I.T.T.: ${reply}`);
+        kittSpeak(reply);
+      }, 400);
+    }
+
+    // Chat triggers
+    function handleChatSend() {
+      try {
+        const input = document.getElementById('input-chat');
+        const val = input.value.trim();
+        if (!val) return;
+        sound.init(); // Resume/init audio on touch
+        sound.playBloop();
+        talkToKitt(val);
+        input.value = "";
+      } catch (e) { addLog(e.message); }
+    }
+
+    const btnSend = document.getElementById('btn-send');
+    if (btnSend) btnSend.addEventListener('click', handleChatSend);
+    
+    const inputChat = document.getElementById('input-chat');
+    if (inputChat) {
+      inputChat.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleChatSend();
+      });
+    }
+
+    // Initial greeting trigger on first user gesture (Highly optimized for iOS touch/click tap)
+    function initSpeechGreeting() {
+      try {
+        sound.init(); // Resumes and starts AudioContext safely!
+        sound.playBloop();
+        addLog("🤖 K.I.T.T. sistemleri tamamen devreye girdi.");
+        kittSpeak("Merhaba Kaptan. Ben Kara Şimşek. Bütün taktik sistemlerim senin kontrolünde. Eğlenmeye hazır mısın?");
+      } catch (e) { addLog(e.message); }
+      
+      // Remove events so it runs only once
+      window.removeEventListener('click', initSpeechGreeting);
+      window.removeEventListener('keydown', initSpeechGreeting);
+      window.removeEventListener('touchstart', initSpeechGreeting);
+    }
+    window.addEventListener('click', initSpeechGreeting);
+    window.addEventListener('keydown', initSpeechGreeting);
+    window.addEventListener('touchstart', initSpeechGreeting); // Mobile touch support!
+
+    // 🔴 FRONT SCANNER EFFECT
+    let scannerDirection = 1;
+    let scannerPosition = 10;
+    // Handled smoothly via hardware-accelerated CSS scanner-active class to prevent mobile cpu lag!
+
+    // 🚀 TURBO BOOST ACTION
+    const btnTurbo = document.getElementById('btn-turbo-boost');
+    const ledTurbo = document.getElementById('led-indicator-turbo');
+    if (btnTurbo) {
+      btnTurbo.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playTurbo();
+          if (ledTurbo) ledTurbo.className = "w-3.5 h-1.5 bg-red-600 rounded-sm glow-red";
+          addLog("🚀 TURBO BOOST AKTİF! Motor devri maksimize ediliyor.");
+          kittSpeak("Turbo boost aktif edildi Kaptan! Sıkı tutun!");
+          
+          const body = document.getElementById('cockpit-body');
+          body.classList.add('shaking');
+          
+          let speed = 0;
+          const speedVal = document.getElementById('speed-val');
+
+          const interval = setInterval(() => {
+            speed += 12;
+            if (speed >= 300) {
+              speed = 300;
+              clearInterval(interval);
+              
+              setTimeout(() => {
+                const slowdown = setInterval(() => {
+                  speed -= 10;
+                  if (speed <= 0) {
+                    speed = 0;
+                    clearInterval(slowdown);
+                    body.classList.remove('shaking');
+                    if (ledTurbo) ledTurbo.className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
+                    addLog("ℹ️ Hız normal seviyelere indi.");
+                  }
+                  if (speedVal) speedVal.innerText = String(speed).padStart(3, '0');
+                }, 30);
+              }, 1500);
+            }
+            if (speedVal) speedVal.innerText = String(speed).padStart(3, '0');
+          }, 25);
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // AUTO PILOT TOGGLE
+    const btnAutoPilot = document.getElementById('btn-auto-pilot');
+    if (btnAutoPilot) {
+      btnAutoPilot.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playToggle();
+          const badge = document.getElementById('led-auto-pilot');
+          const normalBadge = document.getElementById('led-normal');
+          const pursuitBadge = document.getElementById('led-pursuit');
+
+          const isOff = badge.classList.contains('bg-neutral-900');
+          if (isOff) {
+            badge.className = "w-3.5 h-1.5 bg-green-500 rounded-sm glow-green animate-pulse";
+            if (normalBadge) normalBadge.className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
+            if (pursuitBadge) pursuitBadge.className = "w-8 h-1.5 bg-neutral-900 rounded-sm";
+            addLog("🛡️ OTO PİLOT DEVREDE. Kontrol bende Kaptan.");
+            kittSpeak("Kaptan, kontrolü tamamen devralıyorum. Sen arkana yaslan.");
+          } else {
+            badge.className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
+            if (normalBadge) normalBadge.className = "w-3.5 h-1.5 bg-green-500 rounded-sm glow-green";
+            addLog("🛡️ OTO PİLOT KAPATILDI. Manuel kontrol aktif.");
+            kittSpeak("Otomatik pilot devredışı. Kontrol tekrar sende.");
+          }
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // NORMAL MODE BUTTON
+    const btnNormalMode = document.getElementById('btn-normal');
+    if (btnNormalMode) {
+      btnNormalMode.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playToggle();
+          document.getElementById('led-auto-pilot').className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
+          document.getElementById('led-normal').className = "w-3.5 h-1.5 bg-green-500 rounded-sm glow-green";
+          document.getElementById('led-pursuit').className = "w-8 h-1.5 bg-neutral-900 rounded-sm";
+          addLog("ℹ️ Sürüş modu: NORMAL COUPLER.");
+          kittSpeak("Sistemler normal seyir moduna geçti Kaptan.");
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // PURSUIT STATUS
+    const btnPursuitMode = document.getElementById('btn-pursuit');
+    if (btnPursuitMode) {
+      btnPursuitMode.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playAlert();
+          document.getElementById('led-auto-pilot').className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
+          document.getElementById('led-normal').className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
+          document.getElementById('led-pursuit').className = "w-8 h-1.5 bg-amber-500 rounded-sm glow-amber animate-pulse";
+          addLog("🔥 TAKİP MODU AKTİF! Süspansiyon sertleştirildi, motor limitleri kaldırıldı.");
+          kittSpeak("Takip modu aktif edildi Kaptan! Tüm silahlar og hız limitleri serbest!");
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // SCANNER BUTTON
+    const btnScan = document.getElementById('btn-scanner-toggle');
+    const ledScan = document.getElementById('led-indicator-scanner');
+    if (btnScan) {
+      btnScan.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playAlert(); // Change sound to alert for high dramatic tension!
+          if (ledScan) ledScan.className = "w-3.5 h-1.5 bg-red-600 rounded-sm glow-red animate-pulse";
+          addLog("📡 ALERTLOCK: Sinsi bir düşman varilin arkasında pusu kurmuş durumda! Sonar kilitlendi!");
+          kittSpeak("Düşman tespit edildi Kaptan! Bir varilin arkasında pusuda bekliyor, hemen harekete geçelim!");
+
+          setTimeout(() => {
+            if (ledScan) ledScan.className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
+          }, 4000);
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // MICRO JAM BUTTON
+    const btnJam = document.getElementById('btn-micro-jam');
+    if (btnJam) {
+      btnJam.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playAlert();
+          addLog("⚡ SİNYAL BOZUCU: Sinyal bozucu aktif edildi.");
+          kittSpeak("Elektromanyetik dalgalar fırlatılıyor, tüm sinyalleri bozuyorum Kaptan.");
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // OTHER TACTICAL BUTTONS
+    const btnSki = document.getElementById('btn-ski-mode');
+    if (btnSki) {
+      btnSki.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playToggle();
+          addLog("📐 SKİ MODE: Araç iki tekerlek üzerine kaldırılıyor!");
+          kittSpeak("Araç iki tekerlek üzerine kaldırıldı! Dengede kalıyorum Kaptan!");
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // Laser with working glowing indicator light!
+    const btnLaser = document.getElementById('btn-laser');
+    const ledLaser = document.getElementById('led-indicator-laser');
+    if (btnLaser) {
+      btnLaser.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playAlert();
+          if (ledLaser) ledLaser.className = "w-3.5 h-1.5 bg-red-600 rounded-sm glow-red";
+          addLog("⚡ LAZER: Ön lazer topu aktif, hedefe kilitlendi.");
+          kittSpeak("Lazer silahı aktif! Ateş etmeye hazırım Kaptan!");
+          setTimeout(() => {
+            if (ledLaser) ledLaser.className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
+          }, 3000);
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // Eject with working glowing indicator light!
+    const btnEject = document.getElementById('btn-eject');
+    const ledEject = document.getElementById('led-indicator-eject');
+    if (btnEject) {
+      btnEject.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playAlert();
+          if (ledEject) ledEject.className = "w-3.5 h-1.5 bg-red-600 rounded-sm glow-red";
+          addLog("🚨 KOLTUK FIRLATMA: Fırlatma koltukları hazırlandı!");
+          kittSpeak("Fırlatma koltukları devrede! Kaptan, sakın o kırmızı butona basma!");
+          setTimeout(() => {
+            if (ledEject) ledEject.className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
+          }, 3000);
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // CLIMATE CONTROLS & ODOMETER REAL-TIME SYSTEM
+    let temp = 22.5;
+    let odometer = 50230.0;
+
+    // Real-time odometer & holographic road warp speed loop (higher speed = faster ticks & warp!)
+    setInterval(() => {
+      const warpContainer = document.getElementById('warp-tunnel-container');
+      const warpSpeedText = document.getElementById('warp-speed-text');
+
+      if (currentSpeed > 0) {
+        // Increment odometer
+        odometer += (currentSpeed / 3600) * 8.5; // Realistic accumulation based on MPH!
+        const odomElement = document.getElementById('odometer-val');
+        if (odomElement) odomElement.innerText = Math.floor(odometer);
+
+        // Accelerate warp particle speed dynamically!
+        // Less MPH = longer duration, High MPH (max 220) = extremely fast 0.15s duration!
+        const warpTime = Math.max(0.12, 3.2 - (currentSpeed / 220) * 3.0);
+        if (warpContainer) warpContainer.style.setProperty('--warp-time', `${warpTime}s`);
+
+        // Update holographic speed lock percentage
+        const warpPercent = Math.round((currentSpeed / 220) * 100);
+        if (warpSpeedText) {
+          warpSpeedText.innerText = `WARP LOAD: ${warpPercent}%`;
+          warpSpeedText.className = "text-[6.5px] text-cyan-400 mt-auto tracking-widest font-mono led-blue animate-pulse";
+        }
+      } else {
+        // Stationary slow hover crawl
+        if (warpContainer) warpContainer.style.setProperty('--warp-time', '4.5s');
+        if (warpSpeedText) {
+          warpSpeedText.innerText = "WARP SPEED: 0%";
+          warpSpeedText.className = "text-[6.5px] text-cyan-500 mt-auto tracking-widest font-mono opacity-40";
+        }
+      }
+    }, 100);
+
+    const btnTempDown = document.getElementById('btn-temp-down');
+    if (btnTempDown) {
+      btnTempDown.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playBloop();
+          temp -= 0.5;
+          document.getElementById('temp-val').innerText = `${temp.toFixed(1)}°C`;
+          addLog(`🌡️ Klima derecesi düşürüldü: ${temp.toFixed(1)}°C`);
+
+          const coolPhrases = [
+            "Çok sıcak oldu içerisi Kaptan, hemen kutuplara çeviriyorum kokpiti!",
+            "Kaptan, içerisi adeta yanıyor, klima kalkanlarını maksimum soğutmaya aldım!",
+            "Haklısın Kaptan, motor torku kokpiti de ısıttı. Serinletiyorum."
+          ];
+          const phrase = coolPhrases[Math.floor(Math.random() * coolPhrases.length)];
+          kittSpeak(phrase);
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    const btnTempUp = document.getElementById('btn-temp-up');
+    if (btnTempUp) {
+      btnTempUp.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playBloop();
+          temp += 0.5;
+          document.getElementById('temp-val').innerText = `${temp.toFixed(1)}°C`;
+          addLog(`🌡️ Klima derecesi artırıldı: ${temp.toFixed(1)}°C`);
+
+          const heatPhrases = [
+            "Üşüdük mü ya Kaptan? Sıcacık bir fırın yapıyorum burayı!",
+            "Kaptan, dışarısı buz kesmiş olmalı, koltuk ısıtıcılarını da açayım mı?",
+            "Kokpiti hemen şömine sıcaklığına getiriyorum Kaptan."
+          ];
+          const phrase = heatPhrases[Math.floor(Math.random() * heatPhrases.length)];
+          kittSpeak(phrase);
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // 🔑 CONFIG API KEY EVENT LISTENER (Saves securely in localStorage!)
+    const btnConfigApi = document.getElementById('btn-config-api');
+    if (btnConfigApi) {
+      btnConfigApi.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playBloop();
+          const key = prompt("Lütfen Groq API Anahtarınızı Girin (Boş bırakırsanız yerel çevrimdışı NLP devrede kalır):", GROQ_API_KEY);
+          if (key !== null) {
+            const cleanKey = key.trim();
+            localStorage.setItem('groq_api_key', cleanKey);
+            GROQ_API_KEY = cleanKey;
+            addLog("🔑 SYSTEM: Groq API Key güncellendi.");
+            if (cleanKey !== "") {
+              kittSpeak("Groq nöral bağım başarıyla senkronize edildi, Kaptan. LLaMA-3 zekamla konuşabilirsiniz!");
+            } else {
+              kittSpeak("Groq anahtarı temizlendi. Çevrimdışı yerel nöral katmanım devrede.");
+            }
+          }
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // 🚀 NEW INTERACTIVE BOTTOM-LEFT PANEL EVENT LISTENERS!
+    let isXrayActive = false;
+    let isMbsActive = false;
+    let isStealthActive = false;
+    let isSurvActive = false;
+
+    const btnXray = document.getElementById('subbtn-xray');
+    if (btnXray) {
+      btnXray.addEventListener('click', () => {
+        try {
+          sound.init();
+          isXrayActive = !isXrayActive;
+          sound.playXraySound(); // Distinct high-frequency sweep!
+          
+          if (isXrayActive) {
+            btnXray.className = "interactive-btn border-orange-500 text-orange-500 bg-orange-950/20 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1 glow-orange";
+            addLog("📐 SYSTEM: X-RAY SENSORS ONLINE. Tarama başlatıldı.");
+            kittSpeak("X-ray tarayıcıları aktif edildi.");
+          } else {
+            btnXray.className = "interactive-btn btn-glow-orange text-neutral-400 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1";
+            addLog("📐 SYSTEM: X-RAY SENSORS OFFLINE.");
+            kittSpeak("X-ray tarayıcıları kapatıldı.");
+          }
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    const btnMbs = document.getElementById('subbtn-mbs');
+    if (btnMbs) {
+      btnMbs.addEventListener('click', () => {
+        try {
+          sound.init();
+          isMbsActive = !isMbsActive;
+          sound.playMbsSound(); // Low metallic power hum!
+          
+          if (isMbsActive) {
+            btnMbs.className = "interactive-btn border-green-500 text-green-500 bg-green-950/20 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1 glow-green";
+            addLog("📐 SYSTEM: MOLECULAR BOND SHELL devrede. Mukavemet %100.");
+            kittSpeak("Moleküler koruma kalkanı maksimum düzeyde aktifleştirildi.");
+          } else {
+            btnMbs.className = "interactive-btn btn-glow-green text-neutral-400 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1";
+            addLog("📐 SYSTEM: MOLECULAR BOND SHELL devredışı.");
+            kittSpeak("Moleküler kalkan kapatıldı.");
+          }
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    const btnStealth = document.getElementById('subbtn-stealth');
+    if (btnStealth) {
+      btnStealth.addEventListener('click', () => {
+        try {
+          sound.init();
+          isStealthActive = !isStealthActive;
+          sound.playStealthSound(); // Sub-bass cloaking sweep down!
+          
+          if (isStealthActive) {
+            btnStealth.className = "interactive-btn border-blue-500 text-blue-500 bg-blue-950/20 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1 glow-blue";
+            addLog("📐 SYSTEM: STEALTH MODE aktif edildi. Isı ve radar imtiyazı gizlendi.");
+            kittSpeak("Görünmezlik kalkanı devrede. Radarda tamamen gizlendik.");
+          } else {
+            btnStealth.className = "interactive-btn btn-glow-blue text-neutral-400 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1";
+            addLog("📐 SYSTEM: STEALTH MODE devredışı.");
+            kittSpeak("Görünmezlik kalkanı kapatıldı.");
+          }
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    const btnSurv = document.getElementById('subbtn-surv');
+    if (btnSurv) {
+      btnSurv.addEventListener('click', () => {
+        try {
+          sound.init();
+          isSurvActive = !isSurvActive;
+          sound.playSurvSound(); // Fast dual-sine radar chime!
+          
+          if (isSurvActive) {
+            btnSurv.className = "interactive-btn border-red-500 text-red-500 bg-red-950/20 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1 glow-red animate-pulse";
+            addLog("📐 SYSTEM: SURVEILLANCE gözetim radarı 360 derece aktif.");
+            kittSpeak("Gözetleme sensörleri çevredeki tüm hareketleri izliyor.");
+          } else {
+            btnSurv.className = "interactive-btn btn-glow-red text-neutral-400 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1";
+            addLog("📐 SYSTEM: SURVEILLANCE gözetim radarı kapatıldı.");
+            kittSpeak("Gözetleme sensörleri kapatıldı.");
+          }
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // 📻 NEW CABIN MEDIA DECK EVENT LISTENERS! (100% Interactive)
+    let beatInterval = null;
+    let isBeatPlaying = false;
+
+    // 📻 TUNER DECK: Tune frequencies and update odometer COMM digital segment!
+    const btnMediaTune = document.getElementById('mediabtn-tune');
+    if (btnMediaTune) {
+      btnMediaTune.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playBloop();
+          const randFreq = (Math.random() * (108.0 - 88.0) + 88.0).toFixed(1);
+          document.getElementById('radio-val').innerText = randFreq;
+          addLog(`📻 MEDIA: UHF COMM tuned to new frequency: ${randFreq} MHz.`);
+          kittSpeak(`UHF frekansı ${randFreq} olarak değiştirildi, Kaptan.`);
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // 🎵 RETRO BEAT SEQUENCER: Generates native 133 BPM retro kick & snare beats using AudioContext!
+    const btnMediaPlay = document.getElementById('mediabtn-play');
+    if (btnMediaPlay) {
+      btnMediaPlay.addEventListener('click', () => {
+        try {
+          sound.init();
+          if (isBeatPlaying) {
+            clearInterval(beatInterval);
+            beatInterval = null;
+            isBeatPlaying = false;
+            document.getElementById('led-indicator-media').className = "w-2.5 h-1 bg-neutral-900 rounded-sm mb-0.5";
+            document.getElementById('txt-media-play').innerText = "RETRO BEAT";
+            addLog("🎵 MEDIA: Seksenler retro beat döngüsü durduruldu.");
+            return;
+          }
+          
+          isBeatPlaying = true;
+          document.getElementById('led-indicator-media').className = "w-2.5 h-1 bg-green-500 rounded-sm mb-0.5 glow-green animate-pulse";
+          document.getElementById('txt-media-play').innerText = "STOP BEAT";
+          addLog("🎵 MEDIA: 133 BPM Seksenler retro analog beat döngüsü başlatıldı.");
+          kittSpeak("Sizin için seksenler synthwave ritmini başlatıyorum Kaptan.");
+          
+          let step = 0;
+          beatInterval = setInterval(() => {
+            try {
+              sound.init();
+              if (!sound.ctx) return;
+              const osc = sound.ctx.createOscillator();
+              const gain = sound.ctx.createGain();
+              
+              if (step % 2 === 0) {
+                // Kick drum bass pulse
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, sound.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(42, sound.ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.25, sound.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, sound.ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(sound.ctx.destination);
+                osc.start();
+                osc.stop(sound.ctx.currentTime + 0.15);
+              } else {
+                // Snare drum snap noise
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(320, sound.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, sound.ctx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.09, sound.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, sound.ctx.currentTime + 0.12);
+                osc.connect(gain);
+                gain.connect(sound.ctx.destination);
+                osc.start();
+                osc.stop(sound.ctx.currentTime + 0.12);
+              }
+              step++;
+            } catch (e) { /* noop */ }
+          }, 450); // 133 BPM retro groove!
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // 🔇 MUTE SYSTEMS: Mutes KITT Speech and stops beat loops instantly!
+    const btnMediaMute = document.getElementById('mediabtn-mute');
+    if (btnMediaMute) {
+      btnMediaMute.addEventListener('click', () => {
+        try {
+          sound.init();
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+          }
+          if (isBeatPlaying) {
+            clearInterval(beatInterval);
+            beatInterval = null;
+            isBeatPlaying = false;
+            document.getElementById('led-indicator-media').className = "w-2.5 h-1 bg-neutral-900 rounded-sm mb-0.5";
+            document.getElementById('txt-media-play').innerText = "RETRO BEAT";
+          }
+          addLog("🔇 SYSTEM: All audio systems muted.");
+          kittSpeak("Sistemler sessize alındı.");
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // ⚡ PROPULSION & ENERGY MATRIX EVENT LISTENERS! (100% Interactive)
+    let isShieldActive = false;
+    let isThrustActive = false;
+    let thrustTempInterval = null;
+    let thrusterTemp = 45;
+
+    // Plasma Shield Toggle
+    const btnShield = document.getElementById('energybtn-shield');
+    if (btnShield) {
+      btnShield.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playToggle();
+          const led = document.getElementById('led-indicator-shield');
+          if (!isShieldActive) {
+            isShieldActive = true;
+            if (led) led.className = "w-1.5 h-1.5 bg-blue-500 rounded-full glow-blue animate-pulse";
+            addLog("⚡ ENERGY: Plasma Defense Shield online. MBS reinforced.");
+            kittSpeak("Plazma kalkan kilitleri aktifleştirildi Kaptan.");
+          } else {
+            isShieldActive = false;
+            if (led) led.className = "w-1.5 h-1.5 bg-neutral-900 rounded-full";
+            addLog("⚡ ENERGY: Plasma Defense Shield offline.");
+            kittSpeak("Plazma kalkanları devredışı Kaptan.");
+          }
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // Ion Thrusters Toggle (Ramps up the temperature bar!)
+    const btnThrust = document.getElementById('energybtn-thrust');
+    if (btnThrust) {
+      btnThrust.addEventListener('click', () => {
+        try {
+          sound.init();
+          sound.playAlert();
+          const led = document.getElementById('led-indicator-thrust');
+          const tempBar = document.getElementById('thruster-temp-bar');
+          const tempVal = document.getElementById('thruster-temp-val');
+
+          if (!isThrustActive) {
+            isThrustActive = true;
+            if (led) led.className = "w-1.5 h-1.5 bg-blue-500 rounded-full glow-blue";
+            addLog("⚡ ENERGY: Ion Thrusters engaged. Warming up propulsion cells.");
+            kittSpeak("İyon iticiler ısıtılıyor Kaptan.");
+            
+            // Animate temperature rise
+            thrustTempInterval = setInterval(() => {
+              if (thrusterTemp < 180) {
+                thrusterTemp += 5;
+                if (tempVal) tempVal.innerText = `${thrusterTemp}°C`;
+                if (tempBar) {
+                  tempBar.style.width = `${(thrusterTemp / 200) * 100}%`;
+                  if (thrusterTemp > 120) {
+                    tempVal.className = "text-red-500 font-bold led-digital";
+                    tempBar.className = "h-full bg-gradient-to-r from-red-600 to-red-400 rounded-sm";
+                  }
+                }
+              }
+            }, 200);
+          } else {
+            isThrustActive = false;
+            clearInterval(thrustTempInterval);
+            if (led) led.className = "w-1.5 h-1.5 bg-neutral-900 rounded-full";
+            addLog("⚡ ENERGY: Ion Thrusters disengaged. Cooling down.");
+            kittSpeak("İyon iticiler kapatıldı.");
+            
+            // Cool down
+            const cooldown = setInterval(() => {
+              if (thrusterTemp > 45) {
+                thrusterTemp -= 5;
+                if (tempVal) tempVal.innerText = `${thrusterTemp}°C`;
+                if (tempBar) {
+                  tempBar.style.width = `${(thrusterTemp / 200) * 100}%`;
+                  if (thrusterTemp <= 120) {
+                    tempVal.className = "text-blue-400";
+                    tempBar.className = "h-full bg-gradient-to-r from-blue-700 to-blue-400 rounded-sm";
+                  }
+                }
+              } else {
+                clearInterval(cooldown);
+              }
+            }, 300);
+          }
+        } catch (e) { addLog(e.message); }
+      });
+    }
+
+    // 🏎️ GAS & BRAKE PEDALS PHYSICS SYSTEM (Hold down support & Touch Friendly!)
+    let currentSpeed = 0;
+    let gasInterval = null;
+    let brakeInterval = null;
+    let decelerateInterval = null;
+
+    const speedVal = document.getElementById('speed-val');
+    const pedalGas = document.getElementById('pedal-gas');
+    const pedalBrake = document.getElementById('pedal-brake');
+
+    // Continuous deceleration when no pedal is pressed
+    function startPassiveDeceleration() {
+      if (decelerateInterval) return;
+      decelerateInterval = setInterval(() => {
+        if (!gasInterval && !brakeInterval && currentSpeed > 0) {
+          currentSpeed = Math.max(0, currentSpeed - 2);
+          if (speedVal) speedVal.innerText = String(currentSpeed).padStart(3, '0');
+        } else if (currentSpeed === 0) {
+          clearInterval(decelerateInterval);
+          decelerateInterval = null;
+        }
+      }, 100);
+    }
+
+    // GAS PEDAL: Accelerate & play roaring sound on hold!
+    function pressGas() {
+      sound.init();
+      // Instantly cancel any ongoing speech when pressing gas so voice doesn't overlap!
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      
+      sound.playGasSound();
+      clearInterval(brakeInterval);
+      brakeInterval = null;
+      clearInterval(decelerateInterval);
+      decelerateInterval = null;
+
+      if (!gasInterval) {
+        addLog("🏎️ DRIVE: Gas pedal pressed down. Speeding up!");
+        
+        gasInterval = setInterval(() => {
+          if (currentSpeed < 220) { // Max speed 220 MPH
+            currentSpeed += 4;
+            if (speedVal) speedVal.innerText = String(currentSpeed).padStart(3, '0');
+            // Play continuous engine growl at 50% chance to sound realistic
+            if (Math.random() > 0.6) sound.playGasSound();
+          }
+        }, 60);
+      }
+    }
+
+    function releaseGas() {
+      const wasSpeeding = currentSpeed > 30;
+      clearInterval(gasInterval);
+      gasInterval = null;
+      addLog("🏎️ DRIVE: Gas pedal released.");
+      startPassiveDeceleration();
+
+      // If they had accelerated to a solid speed, speak a cool adrenaline phrase on release!
+      if (wasSpeeding) {
+        setTimeout(() => {
+          const gasPhrases = [
+            "Harikaydı Kaptan!",
+            "Müthiş bir ivmeydi, adeta uçtuk!",
+            "İşte buna güç derim, Kaptan!",
+            "Adrenalini hissettin mi Kaptan? Harika gidiyoruz!"
+          ];
+          const chosen = gasPhrases[Math.floor(Math.random() * gasPhrases.length)];
+          kittSpeak(chosen);
+        }, 300);
+      }
+    }
+
+    // BRAKE PEDAL: Slow down & play screeching sound on hold!
+    function pressBrake() {
+      sound.init();
+      // Instantly cancel any ongoing speech when pressing brake so voice doesn't overlap!
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+
+      sound.playBrakePressSound(); // Play hydraulic piston air hiss immediately!
+      clearInterval(gasInterval);
+      gasInterval = null;
+      clearInterval(decelerateInterval);
+      decelerateInterval = null;
+
+      if (!brakeInterval) {
+        addLog("🏎️ DRIVE: Brake pedal pressed down. Slowing down!");
+
+        brakeInterval = setInterval(() => {
+          if (currentSpeed > 0) {
+            currentSpeed = Math.max(0, currentSpeed - 12); // Decelerate very fast
+            if (speedVal) speedVal.innerText = String(currentSpeed).padStart(3, '0');
+            if (Math.random() > 0.6) sound.playBrakeScreechSound(); // Play tire screech while moving!
+          }
+        }, 60);
+      }
+    }
+
+    function releaseBrake() {
+      clearInterval(brakeInterval);
+      brakeInterval = null;
+      addLog("🏎️ DRIVE: Brake pedal released.");
+      startPassiveDeceleration();
+    }
+
+    if (pedalGas) {
+      // Mouse and Touch Event Listeners for Gas Pedal
+      pedalGas.addEventListener('mousedown', pressGas);
+      pedalGas.addEventListener('mouseup', releaseGas);
+      pedalGas.addEventListener('mouseleave', releaseGas);
+      pedalGas.addEventListener('touchstart', (e) => { e.preventDefault(); pressGas(); });
+      pedalGas.addEventListener('touchend', releaseGas);
+    }
+
+    if (pedalBrake) {
+      // Mouse and Touch Event Listeners for Brake Pedal
+      pedalBrake.addEventListener('mousedown', pressBrake);
+      pedalBrake.addEventListener('mouseup', releaseBrake);
+      pedalBrake.addEventListener('mouseleave', releaseBrake);
+      pedalBrake.addEventListener('touchstart', (e) => { e.preventDefault(); pressBrake(); });
+      pedalBrake.addEventListener('touchend', releaseBrake);
+    }
+  </script>
+</body>
+</html>
