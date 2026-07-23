@@ -2,7 +2,7 @@
 
 An immersive, highly interactive, retro-futuristic K.I.T.T. (Knight Rider) cockpit dashboard that runs natively on modern web browsers and mobile viewports. Developed completely in modern HTML5, Vanilla CSS, and JavaScript.
 
-👉 **Live Web App:** [https://ethereal-mote-zq6bgp3.shipstatic.com](https://ethereal-mote-zq6bgp3.shipstatic.com)
+👉 **Live Web App:** [https://kitt-arda.shipstatic.com](https://kitt-arda.shipstatic.com)
 
 ---
 
