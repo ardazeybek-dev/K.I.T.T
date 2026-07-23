@@ -71,7 +71,16 @@
       color: #3b82f6;
       text-shadow: 0 0 8px rgba(59, 130, 246, 0.85);
     }
-    
+
+    /* LED / Shape Glow Utilities (used across the cockpit — previously undefined!)
+       drop-shadow works on BOTH html boxes AND inline SVG paths, unlike box-shadow. */
+    .glow-red    { filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.95)); }
+    .glow-orange { filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.95)); }
+    .glow-green  { filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.95)); }
+    .glow-blue   { filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.95)); }
+    .glow-amber  { filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.95)); }
+    .glow-yellow { filter: drop-shadow(0 0 4px rgba(234, 179, 8, 0.95)); }
+
     /* Neon Border Glows */
     .border-glow-red { border-color: rgba(239, 68, 68, 0.2); box-shadow: 0 0 10px rgba(239, 68, 68, 0.1); }
     .border-glow-orange { border-color: rgba(249, 115, 22, 0.2); box-shadow: 0 0 10px rgba(249, 115, 22, 0.1); }
@@ -427,6 +436,18 @@
             <i data-lucide="send" class="w-3.5 h-3.5"></i>
           </button>
         </div>
+
+        <!-- VISIBLE OPS LOG CONSOLE: shows the conversation + system events on screen
+             (previously replies were audio-only, which felt like nothing happened) -->
+        <div class="w-full max-w-[480px] flex flex-col gap-1">
+          <div class="flex items-center justify-between px-0.5">
+            <span class="text-[9px] text-neutral-500 font-orbitron font-bold tracking-wider">K.I.T.T. OPS LOG</span>
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full glow-green animate-pulse"></span>
+          </div>
+          <div id="log-box" class="h-24 sm:h-28 overflow-y-auto bg-black border border-neutral-900 rounded p-2 text-[10px] leading-relaxed text-orange-500/90 font-mono space-y-0.5">
+            <div class="text-neutral-600">[00:00:00] K.I.T.T. çevrimiçi. Mesaj yazıp SÖYLE'ye bas ya da bir sistem tuşuna dokun.</div>
+          </div>
+        </div>
       </div>
 
       <!-- System Console Switchboard (Sleek button panel) -->
@@ -630,19 +651,50 @@
     class SoundSynth {
       constructor() {
         this.ctx = null;
+        this.masterGain = null;   // Single bus so MUTE truly silences every SFX
+        this.muted = false;
+        this._noiseBuffer = null; // Reusable white-noise buffer for realistic FX
       }
-      
+
       init() {
         try {
           if (!this.ctx) {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.value = this.muted ? 0 : 1;
+            this.masterGain.connect(this.ctx.destination);
           }
           if (this.ctx && this.ctx.state === 'suspended') {
-            this.ctx.resume(); // Safe resume on mobile Safari autoplay rules!
+            // resume() returns a promise on mobile Safari/Chrome — swallow rejection
+            const p = this.ctx.resume();
+            if (p && typeof p.catch === 'function') p.catch(() => {});
           }
         } catch (e) {
           console.warn("AudioContext not supported on this browser:", e);
         }
+      }
+
+      // Where every voice/SFX should connect (never the raw destination)
+      _out() { return this.masterGain || (this.ctx && this.ctx.destination); }
+
+      // Toggle-safe master mute for ALL synthesized audio
+      setMuted(m) {
+        this.muted = m;
+        try { if (this.masterGain) this.masterGain.gain.value = m ? 0 : 1; } catch (e) {}
+      }
+
+      // Lazily built shared white-noise buffer (engines, tire screech, turbo whoosh)
+      _noise() {
+        try {
+          if (!this._noiseBuffer && this.ctx) {
+            const len = Math.floor(this.ctx.sampleRate * 1.5);
+            const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+            this._noiseBuffer = buf;
+          }
+        } catch (e) {}
+        return this._noiseBuffer;
       }
 
       playBloop() {
@@ -657,7 +709,7 @@
           gain.gain.setValueAtTime(0.12, this.ctx.currentTime); // Safe crisp 0.12
           gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this._out());
           osc.start();
           osc.stop(this.ctx.currentTime + 0.15);
         } catch (e) { console.warn(e); }
@@ -676,7 +728,7 @@
           gain.gain.setValueAtTime(0.10, this.ctx.currentTime); // Crisp 0.10
           gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this._out());
           osc.start();
           osc.stop(this.ctx.currentTime + 0.35);
         } catch (e) { console.warn(e); }
@@ -686,18 +738,42 @@
         try {
           this.init();
           if (!this.ctx) return;
-          const duration = 1.5;
+          const t = this.ctx.currentTime;
+          const duration = 1.6;
+
+          // Layer 1: rising turbine whine (the classic K.I.T.T. boost climb)
           const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
+          const oGain = this.ctx.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(100, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + duration);
-          gain.gain.setValueAtTime(0.35, this.ctx.currentTime); // Strong turbo roar 0.35!
-          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start();
-          osc.stop(this.ctx.currentTime + duration);
+          osc.frequency.setValueAtTime(110, t);
+          osc.frequency.exponentialRampToValueAtTime(1400, t + duration);
+          oGain.gain.setValueAtTime(0.28, t);
+          oGain.gain.exponentialRampToValueAtTime(0.01, t + duration);
+          osc.connect(oGain);
+          oGain.connect(this._out());
+          osc.start(t);
+          osc.stop(t + duration);
+
+          // Layer 2: swept-band air whoosh (noise) for that jet-thrust body
+          const noiseBuf = this._noise();
+          if (noiseBuf) {
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = noiseBuf;
+            const nf = this.ctx.createBiquadFilter();
+            nf.type = 'bandpass';
+            nf.Q.value = 0.9;
+            nf.frequency.setValueAtTime(320, t);
+            nf.frequency.exponentialRampToValueAtTime(3200, t + duration);
+            const nGain = this.ctx.createGain();
+            nGain.gain.setValueAtTime(0.0001, t);
+            nGain.gain.linearRampToValueAtTime(0.22, t + duration * 0.55);
+            nGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+            noise.connect(nf);
+            nf.connect(nGain);
+            nGain.connect(this._out());
+            noise.start(t);
+            noise.stop(t + duration);
+          }
         } catch (e) { console.warn(e); }
       }
 
@@ -713,7 +789,7 @@
           gain.gain.setValueAtTime(0.12, this.ctx.currentTime); // Safe crisp 0.12
           gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this._out());
           osc.start();
           osc.stop(this.ctx.currentTime + 0.15);
         } catch (e) { console.warn(e); }
@@ -749,7 +825,7 @@
           osc1.connect(filter);
           osc2.connect(filter);
           filter.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this._out());
 
           osc1.start();
           osc2.start();
@@ -771,7 +847,7 @@
           gain.gain.setValueAtTime(0.18, this.ctx.currentTime); // Hiss volume
           gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this._out());
           osc.start();
           osc.stop(this.ctx.currentTime + 0.2);
         } catch (e) { console.warn(e); }
@@ -781,19 +857,40 @@
         try {
           this.init();
           if (!this.ctx) return;
-          // High-pitched rubber screeching
+          const t = this.ctx.currentTime;
+          // High-pitched rubber screech tone
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-          osc.frequency.setValueAtTime(1100, this.ctx.currentTime + 0.05);
-          osc.frequency.setValueAtTime(900, this.ctx.currentTime + 0.1);
-          gain.gain.setValueAtTime(0.10, this.ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+          osc.frequency.setValueAtTime(800, t);
+          osc.frequency.setValueAtTime(1100, t + 0.05);
+          osc.frequency.setValueAtTime(900, t + 0.1);
+          gain.gain.setValueAtTime(0.08, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start();
-          osc.stop(this.ctx.currentTime + 0.2);
+          gain.connect(this._out());
+          osc.start(t);
+          osc.stop(t + 0.2);
+
+          // Gritty rubber-on-asphalt noise layer for authenticity
+          const noiseBuf = this._noise();
+          if (noiseBuf) {
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = noiseBuf;
+            const nf = this.ctx.createBiquadFilter();
+            nf.type = 'bandpass';
+            nf.Q.value = 6;
+            nf.frequency.setValueAtTime(1600, t);
+            nf.frequency.linearRampToValueAtTime(1200, t + 0.2);
+            const nGain = this.ctx.createGain();
+            nGain.gain.setValueAtTime(0.06, t);
+            nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+            noise.connect(nf);
+            nf.connect(nGain);
+            nGain.connect(this._out());
+            noise.start(t);
+            noise.stop(t + 0.22);
+          }
         } catch (e) { console.warn(e); }
       }
 
@@ -809,7 +906,7 @@
           gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this._out());
           osc.start();
           osc.stop(this.ctx.currentTime + 0.35);
         } catch (e) {}
@@ -827,7 +924,7 @@
           gain.gain.setValueAtTime(0.16, this.ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this._out());
           osc.start();
           osc.stop(this.ctx.currentTime + 0.4);
         } catch (e) {}
@@ -845,7 +942,7 @@
           gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this._out());
           osc.start();
           osc.stop(this.ctx.currentTime + 0.5);
         } catch (e) {}
@@ -865,7 +962,8 @@
           gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
           osc1.connect(gain);
-          gain.connect(this.ctx.destination);
+          osc2.connect(gain); // Was missing — the harmony tone never reached output
+          gain.connect(this._out());
           osc1.start();
           osc2.start();
           osc1.stop(this.ctx.currentTime + 0.25);
@@ -877,15 +975,28 @@
     const sound = new SoundSynth();
 
     // 🗣️ SPEECH SYNTHESIS ENGINE (Adaptive Voice Picker & Normalizer to prevent female monster crackle!)
+
+    // Voices load ASYNCHRONOUSLY — getVoices() is empty on first call (esp. mobile/Chrome).
+    // Cache them and refresh whenever the browser signals they are ready.
+    let cachedVoices = [];
+    function refreshVoices() {
+      try { cachedVoices = window.speechSynthesis.getVoices() || []; } catch (e) { cachedVoices = []; }
+    }
+    if ('speechSynthesis' in window) {
+      refreshVoices();
+      // onvoiceschanged fires once the voice list is populated
+      window.speechSynthesis.addEventListener('voiceschanged', refreshVoices);
+    }
+
     function kittSpeak(text) {
       try {
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
-          
+
           const utterance = new SpeechSynthesisUtterance(text);
           utterance.lang = 'tr-TR';
-          
-          const voices = window.speechSynthesis.getVoices();
+
+          const voices = (cachedVoices && cachedVoices.length) ? cachedVoices : window.speechSynthesis.getVoices();
           // 1. Explicitly seek high-quality Turkish male voices first (Tolga on Windows, Cem on iOS)
           let trVoice = voices.find(v => v.lang.startsWith('tr') && (v.name.includes('Tolga') || v.name.includes('Cem') || v.name.includes('male')));
           if (!trVoice) {
@@ -1011,7 +1122,7 @@
     const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
     const SYSTEM_PROMPT = `Sen 80'lerin efsanevi Kara Şimşek dizisindeki, yapay zekalı akıllı spor araba K.I.T.T.'sin (KITT). 
     Pilotun Arda (Zeybek) isimli dahi bir yazılımcıdır. 
-    Senin karakterin: son derece sadık, bilge, soğukkanlı, retro-teknolojik, hafif esprili og karizmatiktir. 
+    Senin karakterin: son derece sadık, bilge, soğukkanlı, retro-teknolojik, hafif esprili ve karizmatiktir.
     Arda'ya hitap ederken "Kaptan" kelimesini kullanabilirsin ama bunu her cümlende aşırı tekrarlama, son derece doğal ve seyrek kullan (Örn: hitabı cümlenin sadece başında veya sonunda bir kez kullan veya bazen hiç kullanma). Asla "Arda", "Arda reisim", "Arda reis", "dahi pilotum" deme.
     Cevapların kısa, havalı, net ve öz olmalıdır (maksimum 2-3 cümle). 
     Sorulan her şeye, saçma sapan veya komik olsa bile K.I.T.T. karakterini bozmadan akıllıca ve eğlenceli cevaplar ver. 
@@ -1101,12 +1212,17 @@
             const data = await response.json();
             reply = data.choices[0].message.content.trim();
           } else {
-            addLog(`⚠️ Groq API Error: ${response.status}`);
+            // 401/403 => key missing or invalid on THIS site (localStorage is per-domain)
+            if (response.status === 401 || response.status === 403) {
+              addLog(`🔑 Groq anahtarı yok/geçersiz (HTTP ${response.status}). Sağ üstteki "CONFIG API" ile anahtarını gir — yoksa yerel modda devam.`);
+            } else {
+              addLog(`⚠️ Groq API hatası: ${response.status}`);
+            }
             throw new Error(`Groq HTTP Error ${response.status}`);
           }
         } catch (apiErr) {
           console.warn("⚠️ Groq API connection error, falling back locally...", apiErr);
-          addLog(`⚙️ K.I.T.T. yerel nöral katmana geçiş yaptı: ${apiErr.message}`);
+          addLog(`⚙️ K.I.T.T. yerel nöral katman devrede.`);
           
           // Local offline Turkish dictionary fallback!
           if (query.includes("selam") || query.includes("merhaba")) {
@@ -1171,6 +1287,7 @@
     function initSpeechGreeting() {
       try {
         sound.init(); // Resumes and starts AudioContext safely!
+        refreshVoices(); // First gesture is the best moment to grab the voice list on iOS
         sound.playBloop();
         addLog("🤖 K.I.T.T. sistemleri tamamen devreye girdi.");
         kittSpeak("Merhaba Kaptan. Ben Kara Şimşek. Bütün taktik sistemlerim senin kontrolünde. Eğlenmeye hazır mısın?");
@@ -1289,7 +1406,7 @@
           document.getElementById('led-normal').className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
           document.getElementById('led-pursuit').className = "w-8 h-1.5 bg-amber-500 rounded-sm glow-amber animate-pulse";
           addLog("🔥 TAKİP MODU AKTİF! Süspansiyon sertleştirildi, motor limitleri kaldırıldı.");
-          kittSpeak("Takip modu aktif edildi Kaptan! Tüm silahlar og hız limitleri serbest!");
+          kittSpeak("Takip modu aktif edildi Kaptan! Tüm silahlar ve hız limitleri serbest!");
         } catch (e) { addLog(e.message); }
       });
     }
@@ -1623,7 +1740,7 @@
                 gain.gain.setValueAtTime(0.25, sound.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, sound.ctx.currentTime + 0.15);
                 osc.connect(gain);
-                gain.connect(sound.ctx.destination);
+                gain.connect(sound._out());
                 osc.start();
                 osc.stop(sound.ctx.currentTime + 0.15);
               } else {
@@ -1634,7 +1751,7 @@
                 gain.gain.setValueAtTime(0.09, sound.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, sound.ctx.currentTime + 0.12);
                 osc.connect(gain);
-                gain.connect(sound.ctx.destination);
+                gain.connect(sound._out());
                 osc.start();
                 osc.stop(sound.ctx.currentTime + 0.12);
               }
@@ -1645,24 +1762,36 @@
       });
     }
 
-    // 🔇 MUTE SYSTEMS: Mutes KITT Speech and stops beat loops instantly!
+    // 🔇 MUTE SYSTEMS: True master mute toggle — silences speech, beats AND every synth SFX.
+    let isAudioMuted = false;
     const btnMediaMute = document.getElementById('mediabtn-mute');
     if (btnMediaMute) {
+      const muteLabel = btnMediaMute.querySelector('span');
       btnMediaMute.addEventListener('click', () => {
         try {
           sound.init();
-          if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
+          isAudioMuted = !isAudioMuted;
+          sound.setMuted(isAudioMuted);
+
+          if (isAudioMuted) {
+            // Cut everything currently sounding
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            if (isBeatPlaying) {
+              clearInterval(beatInterval);
+              beatInterval = null;
+              isBeatPlaying = false;
+              document.getElementById('led-indicator-media').className = "w-2.5 h-1 bg-neutral-900 rounded-sm mb-0.5";
+              document.getElementById('txt-media-play').innerText = "RETRO BEAT";
+            }
+            if (muteLabel) muteLabel.innerText = "SES KAPALI";
+            btnMediaMute.classList.add('glow-red');
+            addLog("🔇 SYSTEM: All audio muted.");
+          } else {
+            if (muteLabel) muteLabel.innerText = "MUTE AUDIO";
+            btnMediaMute.classList.remove('glow-red');
+            addLog("🔊 SYSTEM: Audio restored.");
+            kittSpeak("Ses sistemleri tekrar devrede Kaptan.");
           }
-          if (isBeatPlaying) {
-            clearInterval(beatInterval);
-            beatInterval = null;
-            isBeatPlaying = false;
-            document.getElementById('led-indicator-media').className = "w-2.5 h-1 bg-neutral-900 rounded-sm mb-0.5";
-            document.getElementById('txt-media-play').innerText = "RETRO BEAT";
-          }
-          addLog("🔇 SYSTEM: All audio systems muted.");
-          kittSpeak("Sistemler sessize alındı.");
         } catch (e) { addLog(e.message); }
       });
     }
