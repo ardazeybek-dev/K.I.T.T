@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>K.I.T.T. - Kara Şimşek Supercar Dashboard</title>
+  <title>K.I.T.T. - Knight Rider Supercar Dashboard</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts for Retro/Monospace Look -->
@@ -183,7 +183,7 @@
       </button>
       <div class="flex items-center gap-1.5 bg-neutral-950 border border-neutral-900 px-2 py-0.5 sm:py-1 rounded">
         <span class="text-neutral-500 font-bold text-[10px]">PILOT:</span>
-        <input id="input-pilot-name" type="text" value="ARDA" class="bg-transparent text-orange-500 font-bold tracking-wider font-orbitron led-orange w-12 sm:w-16 focus:outline-none focus:border-b border-orange-950 text-center uppercase text-[10px] sm:text-xs" placeholder="NAME" title="Süs Pilot Girişi" />
+        <input id="input-pilot-name" type="text" value="ARDA" class="bg-transparent text-orange-500 font-bold tracking-wider font-orbitron led-orange w-12 sm:w-16 focus:outline-none focus:border-b border-orange-950 text-center uppercase text-[10px] sm:text-xs" placeholder="NAME" title="Pilot name (cosmetic)" />
       </div>
     </div>
   </div>
@@ -280,7 +280,7 @@
 
           <button id="btn-pursuit" class="interactive-btn btn-glow-orange text-neutral-400 text-[10px] font-bold py-2 px-1 rounded flex flex-col items-center justify-center gap-1 col-span-2 active:scale-95">
             <div id="led-pursuit" class="w-8 h-1.5 bg-neutral-900 rounded-sm"></div>
-            <span>PURSUIT STATUS (TAKİP SİSTEMİ)</span>
+            <span>PURSUIT STATUS</span>
           </button>
         </div>
       </div>
@@ -430,9 +430,9 @@
 
         <!-- Chat Input HUD (Talking with KITT!) -->
         <div class="w-full max-w-[480px] flex gap-2 border border-neutral-900 p-1.5 bg-neutral-950 rounded">
-          <input id="input-chat" type="text" placeholder="K.I.T.T. ile konuşun..." class="flex-1 bg-black text-orange-500 font-mono tracking-wide placeholder-orange-950 text-sm px-3 sm:px-4 py-3 rounded border border-neutral-900 focus:border-orange-500 focus:outline-none transition-colors min-w-0" />
+          <input id="input-chat" type="text" placeholder="Talk to K.I.T.T. ..." class="flex-1 bg-black text-orange-500 font-mono tracking-wide placeholder-orange-950 text-sm px-3 sm:px-4 py-3 rounded border border-neutral-900 focus:border-orange-500 focus:outline-none transition-colors min-w-0" />
           <button id="btn-send" class="bg-orange-600 hover:bg-orange-500 text-black px-4 sm:px-6 py-3 rounded font-orbitron font-extrabold text-xs tracking-wider transition-all flex items-center gap-1.5 shrink-0">
-            <span>SÖYLE</span>
+            <span>SEND</span>
             <i data-lucide="send" class="w-3.5 h-3.5"></i>
           </button>
         </div>
@@ -445,7 +445,7 @@
             <span class="w-1.5 h-1.5 bg-green-500 rounded-full glow-green animate-pulse"></span>
           </div>
           <div id="log-box" class="h-24 sm:h-28 overflow-y-auto bg-black border border-neutral-900 rounded p-2 text-[10px] leading-relaxed text-orange-500/90 font-mono space-y-0.5">
-            <div class="text-neutral-600">[00:00:00] K.I.T.T. çevrimiçi. Mesaj yazıp SÖYLE'ye bas ya da bir sistem tuşuna dokun.</div>
+            <div class="text-neutral-600">[00:00:00] K.I.T.T. online. Type a message and hit SEND, or touch any system control.</div>
           </div>
         </div>
       </div>
@@ -994,6 +994,8 @@
           window.speechSynthesis.cancel();
 
           const utterance = new SpeechSynthesisUtterance(text);
+          // K.I.T.T. speaks Turkish on purpose — do not switch this to another
+          // locale. The voice is the character; the written interface is English.
           utterance.lang = 'tr-TR';
 
           const voices = (cachedVoices && cachedVoices.length) ? cachedVoices : window.speechSynthesis.getVoices();
@@ -1003,23 +1005,24 @@
             // 2. Secondary fallback
             trVoice = voices.find(v => v.lang.startsWith('tr'));
           }
-          
+
           if (trVoice) {
             utterance.voice = trVoice;
           }
-          
+
           const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          
+
           if (isMobile) {
-            // MOBİLDE 100% SIFIR CIZIRTI VE KRİSTAL NET SES:
-            // Mobil cihazlar (özellikle iOS Safari) pitch-shift yapınca sesi aşırı bozar ve cızıldatır.
-            // Bu yüzden mobilde ses kalınlaştırma yapmıyoruz; telefonun kendi orijinal, berrak, yüksek kaliteli Siri/Google Türkçe sesini yalın haliyle çalıyoruz!
-            utterance.pitch = 1.0; 
+            // ZERO CRACKLE AND CRYSTAL CLEAR AUDIO ON MOBILE:
+            // Mobile devices (iOS Safari especially) badly distort the voice when
+            // it is pitch-shifted. So we do not deepen the voice on mobile; we play
+            // the phone's own clean, high quality Siri/Google Turkish voice as it is.
+            utterance.pitch = 1.0;
             utterance.rate = 1.0;
-            utterance.volume = 1.00; 
+            utterance.volume = 1.00;
           } else {
-            // LAPTOPTA ULTRA DEEP ROBOT SESSİZLİĞİ (Microsoft Tolga ile harika olan ses):
-            utterance.pitch = 0.28; // Keep that ultra-deep K.I.T.T. bassy robot sound you love on Windows!
+            // ULTRA DEEP ROBOT VOICE ON DESKTOP (sounds great with Microsoft Tolga):
+            utterance.pitch = 0.28; // the ultra-deep bassy K.I.T.T. robot sound on Windows
             utterance.rate = 1.05;
             utterance.volume = 1.00;
           }
@@ -1120,12 +1123,14 @@
     let GROQ_API_KEY = localStorage.getItem('groq_api_key') || "";
     // Modified Groq endpoint path to "openai" instead of "openapi" to resolve 404!
     const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-    const SYSTEM_PROMPT = `Sen 80'lerin efsanevi Kara Şimşek dizisindeki, yapay zekalı akıllı spor araba K.I.T.T.'sin (KITT). 
-    Pilotun Arda (Zeybek) isimli dahi bir yazılımcıdır. 
+    // K.I.T.T. answers in Turkish because the replies are spoken aloud and the
+    // voice is Turkish. Keep this prompt in Turkish.
+    const SYSTEM_PROMPT = `Sen 80'lerin efsanevi Kara Şimşek dizisindeki, yapay zekalı akıllı spor araba K.I.T.T.'sin (KITT).
+    Pilotun Arda (Zeybek) isimli dahi bir yazılımcıdır.
     Senin karakterin: son derece sadık, bilge, soğukkanlı, retro-teknolojik, hafif esprili ve karizmatiktir.
     Arda'ya hitap ederken "Kaptan" kelimesini kullanabilirsin ama bunu her cümlende aşırı tekrarlama, son derece doğal ve seyrek kullan (Örn: hitabı cümlenin sadece başında veya sonunda bir kez kullan veya bazen hiç kullanma). Asla "Arda", "Arda reisim", "Arda reis", "dahi pilotum" deme.
-    Cevapların kısa, havalı, net ve öz olmalıdır (maksimum 2-3 cümle). 
-    Sorulan her şeye, saçma sapan veya komik olsa bile K.I.T.T. karakterini bozmadan akıllıca ve eğlenceli cevaplar ver. 
+    Cevapların kısa, havalı, net ve öz olmalıdır (maksimum 2-3 cümle).
+    Sorulan her şeye, saçma sapan veya komik olsa bile K.I.T.T. karakterini bozmadan akıllıca ve eğlenceli cevaplar ver.
     Her zaman Türkçe konuş.`;
 
     // 🤖 100% LOCAL OFFLINE INTELLIGENT PERSONA CHATBOT FALLBACK
@@ -1161,7 +1166,7 @@
         "Mevcut motor torkum ve hız limitlerim senin kontrolünde."
       ],
       "default": [
-        "Anlaşıldı. Tüm donanım sıcaklığım and kalkanlarım %100 sapasağlam durumda, uçuşa hazırız!",
+        "Anlaşıldı. Tüm donanım sıcaklığım ve kalkanlarım %100 sapasağlam durumda, uçuşa hazırız!",
         "Sistem taramamda şüpheli hiçbir tehdit bulunamadı. Tam gaz devam edelim!",
         "Söylediklerini tahlil ettim. Şanzıman ve motor sıcaklığım mükemmel durumda.",
         "Taktik sensörlerim devrede. Yolumuz tamamen açık Kaptan."
@@ -1169,7 +1174,7 @@
     };
 
     async function talkToKitt(inputText) {
-      addLog(`💬 Kaptan: ${inputText}`);
+      addLog(`💬 Captain: ${inputText}`);
       let reply = "";
 
       // 🧠 1. Check local fast command list first for extreme speed
@@ -1188,7 +1193,7 @@
       
       // 🔮 2. Dynamic LLaMA-3 Groq Fetch API (Full AI Brain!) with Auto Local Fallback on error
       if (!reply) {
-        addLog("⚙️ K.I.T.T. LLaMA-3 nöral ağı üzerinden düşünüyor...");
+        addLog("⚙️ K.I.T.T. is thinking on the LLaMA-3 neural network...");
         try {
           // Bypassed "openapi" to correct "openai" path to solve the 404 error!
           const response = await fetch(GROQ_API_URL, {
@@ -1214,16 +1219,16 @@
           } else {
             // 401/403 => key missing or invalid on THIS site (localStorage is per-domain)
             if (response.status === 401 || response.status === 403) {
-              addLog(`🔑 Groq anahtarı yok/geçersiz (HTTP ${response.status}). Sağ üstteki "CONFIG API" ile anahtarını gir — yoksa yerel modda devam.`);
+              addLog(`🔑 Groq key missing or invalid (HTTP ${response.status}). Enter your key with "CONFIG API" at the top right — otherwise we continue in local mode.`);
             } else {
-              addLog(`⚠️ Groq API hatası: ${response.status}`);
+              addLog(`⚠️ Groq API error: ${response.status}`);
             }
             throw new Error(`Groq HTTP Error ${response.status}`);
           }
         } catch (apiErr) {
           console.warn("⚠️ Groq API connection error, falling back locally...", apiErr);
-          addLog(`⚙️ K.I.T.T. yerel nöral katman devrede.`);
-          
+          addLog(`⚙️ K.I.T.T. local neural layer engaged.`);
+
           // Local offline Turkish dictionary fallback!
           if (query.includes("selam") || query.includes("merhaba")) {
             const arr = LOCAL_ANSWERS.greetings;
@@ -1289,7 +1294,7 @@
         sound.init(); // Resumes and starts AudioContext safely!
         refreshVoices(); // First gesture is the best moment to grab the voice list on iOS
         sound.playBloop();
-        addLog("🤖 K.I.T.T. sistemleri tamamen devreye girdi.");
+        addLog("🤖 K.I.T.T. systems are fully online.");
         kittSpeak("Merhaba Kaptan. Ben Kara Şimşek. Bütün taktik sistemlerim senin kontrolünde. Eğlenmeye hazır mısın?");
       } catch (e) { addLog(e.message); }
       
@@ -1316,7 +1321,7 @@
           sound.init();
           sound.playTurbo();
           if (ledTurbo) ledTurbo.className = "w-3.5 h-1.5 bg-red-600 rounded-sm glow-red";
-          addLog("🚀 TURBO BOOST AKTİF! Motor devri maksimize ediliyor.");
+          addLog("🚀 TURBO BOOST ACTIVE! Engine revs going to maximum.");
           kittSpeak("Turbo boost aktif edildi Kaptan! Sıkı tutun!");
           
           const body = document.getElementById('cockpit-body');
@@ -1339,7 +1344,7 @@
                     clearInterval(slowdown);
                     body.classList.remove('shaking');
                     if (ledTurbo) ledTurbo.className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
-                    addLog("ℹ️ Hız normal seviyelere indi.");
+                    addLog("ℹ️ Speed is back to normal levels.");
                   }
                   if (speedVal) speedVal.innerText = String(speed).padStart(3, '0');
                 }, 30);
@@ -1367,12 +1372,12 @@
             badge.className = "w-3.5 h-1.5 bg-green-500 rounded-sm glow-green animate-pulse";
             if (normalBadge) normalBadge.className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
             if (pursuitBadge) pursuitBadge.className = "w-8 h-1.5 bg-neutral-900 rounded-sm";
-            addLog("🛡️ OTO PİLOT DEVREDE. Kontrol bende Kaptan.");
+            addLog("🛡️ AUTO PILOT ENGAGED. I have control, Captain.");
             kittSpeak("Kaptan, kontrolü tamamen devralıyorum. Sen arkana yaslan.");
           } else {
             badge.className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
             if (normalBadge) normalBadge.className = "w-3.5 h-1.5 bg-green-500 rounded-sm glow-green";
-            addLog("🛡️ OTO PİLOT KAPATILDI. Manuel kontrol aktif.");
+            addLog("🛡️ AUTO PILOT DISENGAGED. Manual control active.");
             kittSpeak("Otomatik pilot devredışı. Kontrol tekrar sende.");
           }
         } catch (e) { addLog(e.message); }
@@ -1389,7 +1394,7 @@
           document.getElementById('led-auto-pilot').className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
           document.getElementById('led-normal').className = "w-3.5 h-1.5 bg-green-500 rounded-sm glow-green";
           document.getElementById('led-pursuit').className = "w-8 h-1.5 bg-neutral-900 rounded-sm";
-          addLog("ℹ️ Sürüş modu: NORMAL COUPLER.");
+          addLog("ℹ️ Drive mode: NORMAL COUPLER.");
           kittSpeak("Sistemler normal seyir moduna geçti Kaptan.");
         } catch (e) { addLog(e.message); }
       });
@@ -1405,7 +1410,7 @@
           document.getElementById('led-auto-pilot').className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
           document.getElementById('led-normal').className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
           document.getElementById('led-pursuit').className = "w-8 h-1.5 bg-amber-500 rounded-sm glow-amber animate-pulse";
-          addLog("🔥 TAKİP MODU AKTİF! Süspansiyon sertleştirildi, motor limitleri kaldırıldı.");
+          addLog("🔥 PURSUIT MODE ACTIVE! Suspension stiffened, engine limits removed.");
           kittSpeak("Takip modu aktif edildi Kaptan! Tüm silahlar ve hız limitleri serbest!");
         } catch (e) { addLog(e.message); }
       });
@@ -1420,7 +1425,7 @@
           sound.init();
           sound.playAlert(); // Change sound to alert for high dramatic tension!
           if (ledScan) ledScan.className = "w-3.5 h-1.5 bg-red-600 rounded-sm glow-red animate-pulse";
-          addLog("📡 ALERTLOCK: Sinsi bir düşman varilin arkasında pusu kurmuş durumda! Sonar kilitlendi!");
+          addLog("📡 ALERTLOCK: A sneaky hostile is lying in ambush behind a barrel! Sonar locked!");
           kittSpeak("Düşman tespit edildi Kaptan! Bir varilin arkasında pusuda bekliyor, hemen harekete geçelim!");
 
           setTimeout(() => {
@@ -1437,7 +1442,7 @@
         try {
           sound.init();
           sound.playAlert();
-          addLog("⚡ SİNYAL BOZUCU: Sinyal bozucu aktif edildi.");
+          addLog("⚡ JAMMER: Signal jammer engaged.");
           kittSpeak("Elektromanyetik dalgalar fırlatılıyor, tüm sinyalleri bozuyorum Kaptan.");
         } catch (e) { addLog(e.message); }
       });
@@ -1450,7 +1455,7 @@
         try {
           sound.init();
           sound.playToggle();
-          addLog("📐 SKİ MODE: Araç iki tekerlek üzerine kaldırılıyor!");
+          addLog("📐 SKI MODE: The car is going up on two wheels!");
           kittSpeak("Araç iki tekerlek üzerine kaldırıldı! Dengede kalıyorum Kaptan!");
         } catch (e) { addLog(e.message); }
       });
@@ -1465,7 +1470,7 @@
           sound.init();
           sound.playAlert();
           if (ledLaser) ledLaser.className = "w-3.5 h-1.5 bg-red-600 rounded-sm glow-red";
-          addLog("⚡ LAZER: Ön lazer topu aktif, hedefe kilitlendi.");
+          addLog("⚡ LASER: Forward laser cannon active and locked on target.");
           kittSpeak("Lazer silahı aktif! Ateş etmeye hazırım Kaptan!");
           setTimeout(() => {
             if (ledLaser) ledLaser.className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
@@ -1483,7 +1488,7 @@
           sound.init();
           sound.playAlert();
           if (ledEject) ledEject.className = "w-3.5 h-1.5 bg-red-600 rounded-sm glow-red";
-          addLog("🚨 KOLTUK FIRLATMA: Fırlatma koltukları hazırlandı!");
+          addLog("🚨 EJECTION SEAT: Ejection seats are primed!");
           kittSpeak("Fırlatma koltukları devrede! Kaptan, sakın o kırmızı butona basma!");
           setTimeout(() => {
             if (ledEject) ledEject.className = "w-3.5 h-1.5 bg-neutral-900 rounded-sm";
@@ -1536,7 +1541,7 @@
           sound.playBloop();
           temp -= 0.5;
           document.getElementById('temp-val').innerText = `${temp.toFixed(1)}°C`;
-          addLog(`🌡️ Klima derecesi düşürüldü: ${temp.toFixed(1)}°C`);
+          addLog(`🌡️ Climate control lowered: ${temp.toFixed(1)}°C`);
 
           const coolPhrases = [
             "Çok sıcak oldu içerisi Kaptan, hemen kutuplara çeviriyorum kokpiti!",
@@ -1557,7 +1562,7 @@
           sound.playBloop();
           temp += 0.5;
           document.getElementById('temp-val').innerText = `${temp.toFixed(1)}°C`;
-          addLog(`🌡️ Klima derecesi artırıldı: ${temp.toFixed(1)}°C`);
+          addLog(`🌡️ Climate control raised: ${temp.toFixed(1)}°C`);
 
           const heatPhrases = [
             "Üşüdük mü ya Kaptan? Sıcacık bir fırın yapıyorum burayı!",
@@ -1577,12 +1582,12 @@
         try {
           sound.init();
           sound.playBloop();
-          const key = prompt("Lütfen Groq API Anahtarınızı Girin (Boş bırakırsanız yerel çevrimdışı NLP devrede kalır):", GROQ_API_KEY);
+          const key = prompt("Please enter your Groq API key (leave it empty to stay on the local offline NLP):", GROQ_API_KEY);
           if (key !== null) {
             const cleanKey = key.trim();
             localStorage.setItem('groq_api_key', cleanKey);
             GROQ_API_KEY = cleanKey;
-            addLog("🔑 SYSTEM: Groq API Key güncellendi.");
+            addLog("🔑 SYSTEM: Groq API key updated.");
             if (cleanKey !== "") {
               kittSpeak("Groq nöral bağım başarıyla senkronize edildi, Kaptan. LLaMA-3 zekamla konuşabilirsiniz!");
             } else {
@@ -1609,7 +1614,7 @@
           
           if (isXrayActive) {
             btnXray.className = "interactive-btn border-orange-500 text-orange-500 bg-orange-950/20 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1 glow-orange";
-            addLog("📐 SYSTEM: X-RAY SENSORS ONLINE. Tarama başlatıldı.");
+            addLog("📐 SYSTEM: X-RAY SENSORS ONLINE. Scan started.");
             kittSpeak("X-ray tarayıcıları aktif edildi.");
           } else {
             btnXray.className = "interactive-btn btn-glow-orange text-neutral-400 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1";
@@ -1630,11 +1635,11 @@
           
           if (isMbsActive) {
             btnMbs.className = "interactive-btn border-green-500 text-green-500 bg-green-950/20 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1 glow-green";
-            addLog("📐 SYSTEM: MOLECULAR BOND SHELL devrede. Mukavemet %100.");
+            addLog("📐 SYSTEM: MOLECULAR BOND SHELL engaged. Integrity 100%.");
             kittSpeak("Moleküler koruma kalkanı maksimum düzeyde aktifleştirildi.");
           } else {
             btnMbs.className = "interactive-btn btn-glow-green text-neutral-400 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1";
-            addLog("📐 SYSTEM: MOLECULAR BOND SHELL devredışı.");
+            addLog("📐 SYSTEM: MOLECULAR BOND SHELL disengaged.");
             kittSpeak("Moleküler kalkan kapatıldı.");
           }
         } catch (e) { addLog(e.message); }
@@ -1651,11 +1656,11 @@
           
           if (isStealthActive) {
             btnStealth.className = "interactive-btn border-blue-500 text-blue-500 bg-blue-950/20 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1 glow-blue";
-            addLog("📐 SYSTEM: STEALTH MODE aktif edildi. Isı ve radar imtiyazı gizlendi.");
+            addLog("📐 SYSTEM: STEALTH MODE engaged. Heat and radar signature hidden.");
             kittSpeak("Görünmezlik kalkanı devrede. Radarda tamamen gizlendik.");
           } else {
             btnStealth.className = "interactive-btn btn-glow-blue text-neutral-400 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1";
-            addLog("📐 SYSTEM: STEALTH MODE devredışı.");
+            addLog("📐 SYSTEM: STEALTH MODE disengaged.");
             kittSpeak("Görünmezlik kalkanı kapatıldı.");
           }
         } catch (e) { addLog(e.message); }
@@ -1672,11 +1677,11 @@
           
           if (isSurvActive) {
             btnSurv.className = "interactive-btn border-red-500 text-red-500 bg-red-950/20 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1 glow-red animate-pulse";
-            addLog("📐 SYSTEM: SURVEILLANCE gözetim radarı 360 derece aktif.");
+            addLog("📐 SYSTEM: SURVEILLANCE radar active through a full 360 degrees.");
             kittSpeak("Gözetleme sensörleri çevredeki tüm hareketleri izliyor.");
           } else {
             btnSurv.className = "interactive-btn btn-glow-red text-neutral-400 text-[9px] font-bold py-2.5 rounded flex items-center justify-center gap-1";
-            addLog("📐 SYSTEM: SURVEILLANCE gözetim radarı kapatıldı.");
+            addLog("📐 SYSTEM: SURVEILLANCE radar switched off.");
             kittSpeak("Gözetleme sensörleri kapatıldı.");
           }
         } catch (e) { addLog(e.message); }
@@ -1714,14 +1719,14 @@
             isBeatPlaying = false;
             document.getElementById('led-indicator-media').className = "w-2.5 h-1 bg-neutral-900 rounded-sm mb-0.5";
             document.getElementById('txt-media-play').innerText = "RETRO BEAT";
-            addLog("🎵 MEDIA: Seksenler retro beat döngüsü durduruldu.");
+            addLog("🎵 MEDIA: Eighties retro beat loop stopped.");
             return;
           }
           
           isBeatPlaying = true;
           document.getElementById('led-indicator-media').className = "w-2.5 h-1 bg-green-500 rounded-sm mb-0.5 glow-green animate-pulse";
           document.getElementById('txt-media-play').innerText = "STOP BEAT";
-          addLog("🎵 MEDIA: 133 BPM Seksenler retro analog beat döngüsü başlatıldı.");
+          addLog("🎵 MEDIA: 133 BPM eighties retro analog beat loop started.");
           kittSpeak("Sizin için seksenler synthwave ritmini başlatıyorum Kaptan.");
           
           let step = 0;

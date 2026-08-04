@@ -6,16 +6,17 @@ An immersive, highly interactive, retro-futuristic K.I.T.T. (Knight Rider) cockp
 
 ---
 
-### ⚠️ Eğlence Amaçlı Notlar / Disclaimer & Fun Notes
+### ⚠️ Disclaimer & Fun Notes
 
-*   **TR:** Bu proje, dahi yazılımcımız ve pilotumuz **Arda** için tamamen **şakasına, nostalji ve eğlence amaçlı** geliştirilmiştir. **%100 tamamen ücretsizdir**, kar amacı gütmez ve açık kaynaklı bir mizah projesidir. K.I.T.T. size yapay zekalı bir spor araba ruhuyla cana yakın şakalar yapar!
-*   **EN:** This project was developed entirely **for fun, jokes, and nostalgic entertainment purposes** for our dahi developer **Arda**. It is **100% completely free of charge**, non-commercial, open-source, and is meant for good laughs. K.I.T.T. is here to offer friendly and humorous retro supercar banter!
+This project was built entirely **for fun, jokes, and nostalgic entertainment** for its pilot,
+**Arda**. It is **100% free of charge**, non-commercial, open-source, and meant for good laughs.
+K.I.T.T. is here to offer friendly and humorous retro supercar banter!
 
 ---
 
 ## 🌟 Key Features
 
-*   **🧠 Advanced LLaMA-3 AI Brain:** Powered by Groq API, offering lightning-fast, Turkish conversational AI with a dedicated, custom-tailored K.I.T.T. persona.
+*   **🧠 Advanced LLaMA-3 AI Brain:** Powered by the Groq API, offering lightning-fast Turkish conversational AI with a dedicated, custom-tailored K.I.T.T. persona.
 *   **🏎️ Stateful Drive Physics & Pedals:** Fully interactive, hold-to-press GAS and BRAKE pedals that dynamically control vehicle speed up to 220 MPH in real-time, accompanied by realistic V8 engine growls and hydraulic hicking brake synthesizers.
 *   **🌌 Perspective Warp Tunnel (Speed Scatter):** Squeezed beautifully between two rotating vector holograms, this warp particle tunnel accelerates and stretches dynamically based on your current speedometer values.
 *   **📻 Cabin Media Deck & Sequencer:** Integrated UHF Frequencies tuner coupled with an analog 133 BPM drum beat synthesizer built purely on the Web Audio API.
@@ -29,8 +30,11 @@ An immersive, highly interactive, retro-futuristic K.I.T.T. (Knight Rider) cockp
 
 *   **Frontend:** HTML5, CSS3, TailwindCSS (CDN), Google Fonts, Lucide Icons.
 *   **Audio Synthesizers:** Native HTML5 Web Audio API nodes (`OscillatorNode`, `GainNode`, `BiquadFilterNode`).
-*   **Speech Synthesis:** HTML5 `SpeechSynthesis` Engine with custom iOS/Android user-agent pitch-clipping protection.
+*   **Speech Synthesis:** HTML5 `SpeechSynthesis` engine with custom iOS/Android user-agent pitch-clipping protection.
 *   **Intelligence:** Groq Cloud LLaMA-3 AI completion with a local dictionary fallback.
+*   **Language:** The interface and the ops log are in English. **K.I.T.T. himself speaks Turkish** —
+    the persona, his replies and the synthesised voice are Turkish on purpose, because the voice
+    *is* the character. Type to him in Turkish.
 
 ---
 
