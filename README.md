@@ -1,58 +1,108 @@
-# 🏎️ K.I.T.T. (Knight Industries Two Thousand) - Interactive Cockpit Dashboard
+# K.I.T.T.
 
-An immersive, highly interactive, retro-futuristic K.I.T.T. (Knight Rider) cockpit dashboard that runs natively on modern web browsers and mobile viewports. Developed completely in modern HTML5, Vanilla CSS, and JavaScript.
+A Knight Rider cockpit dashboard that runs in the browser. One HTML file, no build
+step. Every sound in it is synthesised in code — there is not a single audio file in
+this repository — and the car talks back to you.
 
-👉 **Live Web App:** [https://kitt-arda.shipstatic.com](https://kitt-arda.shipstatic.com)
+**▶ [Try it live](https://kitt-arda.shipstatic.com)**
 
----
+> Built for fun. It is a nostalgia toy, not a product: non-commercial, free, and
+> happy to be laughed at. **K.I.T.T. himself speaks Turkish** — the persona, the
+> replies and the synthesised voice are Turkish on purpose, because the voice *is*
+> the character. The interface and the ops log are in English. Type to him in Turkish.
 
-### ⚠️ Disclaimer & Fun Notes
+## What it does
 
-This project was built entirely **for fun, jokes, and nostalgic entertainment** for its pilot,
-**Arda**. It is **100% free of charge**, non-commercial, open-source, and meant for good laughs.
-K.I.T.T. is here to offer friendly and humorous retro supercar banter!
+- **Pedals with hold-to-press physics** — gas and brake accelerate and slow the car up
+  to 220 MPH, with an engine growl and a hydraulic brake hiss built from oscillators
+- **A perspective warp tunnel** that stretches and accelerates with the speedometer
+- **Conversation** — ask K.I.T.T. something and he answers out loud, in character
+- **A cabin media deck** — a UHF tuner and a 133 BPM drum sequencer, both synthesised
+- **Propulsion and power switches** — plasma shields and ion thrusters with animated
+  heat bars, a live odometer, and 7-segment neon readouts for speed, comms and climate
+- **Works on a phone** — the wide cockpit grid folds into a vertical scroll panel
 
----
+## How it works
 
-## 🌟 Key Features
+This is the part worth reading.
 
-*   **🧠 Advanced LLaMA-3 AI Brain:** Powered by the Groq API, offering lightning-fast Turkish conversational AI with a dedicated, custom-tailored K.I.T.T. persona.
-*   **🏎️ Stateful Drive Physics & Pedals:** Fully interactive, hold-to-press GAS and BRAKE pedals that dynamically control vehicle speed up to 220 MPH in real-time, accompanied by realistic V8 engine growls and hydraulic hicking brake synthesizers.
-*   **🌌 Perspective Warp Tunnel (Speed Scatter):** Squeezed beautifully between two rotating vector holograms, this warp particle tunnel accelerates and stretches dynamically based on your current speedometer values.
-*   **📻 Cabin Media Deck & Sequencer:** Integrated UHF Frequencies tuner coupled with an analog 133 BPM drum beat synthesizer built purely on the Web Audio API.
-*   **🔋 Propulsion & Power Matrix:** Interactive toggle switches for Plasma Shields and Ion Thrusters that dynamically animate heat bars.
-*   **🌡️ Dynamic Digital Diagnostics:** Integrated 7-segment neon displays for live SPEED (MPH), Odometer (real-time distance accumulator), Comm UHF, and a humorous Cabin Climate Control segment.
-*   **📱 100% Responsive Design:** Smooth grid layouts optimizing wide widescreen viewports and mobile vertical scroll panels seamlessly with zero double-tap delays.
+**Every sound is synthesised, through one bus.** Oscillators and filtered noise, no
+samples. Two details make it hold together. The white-noise buffer — used by the
+engine, the tyre screech and the turbo whoosh — is built once, lazily, and reused;
+filling a fresh 1.5-second buffer on every effect would allocate constantly during a
+pedal hold. And every voice connects to a single master `GainNode` rather than to
+`ctx.destination`, which is what makes the mute button actually mute: with per-effect
+muting, any sound started after the toggle would slip through.
 
----
+**Browsers do not just block audio — they suspend it.** Creating the `AudioContext` on
+the first user gesture is the well-known half. The other half is calling `resume()`
+when the context comes back `suspended`, because the context is also suspended when
+the tab loses focus. On mobile Safari `resume()` returns a promise that can reject,
+so the rejection is swallowed deliberately: a failed resume should leave the page
+silent, not throw.
 
-## 🛠️ Technology Stack
+**The voice is deepened on desktop and left alone on mobile.** `pitch = 0.28` with
+Microsoft Tolga on Windows gives the deep, flat K.I.T.T. delivery the character needs.
+The same setting on iOS Safari produces crackling, distorted speech — the mobile
+engines do not pitch-shift cleanly. So mobile plays the phone's own Turkish voice
+unmodified at pitch 1.0. Same character, two different paths to it, because the
+platforms genuinely differ.
 
-*   **Frontend:** HTML5, CSS3, TailwindCSS (CDN), Google Fonts, Lucide Icons.
-*   **Audio Synthesizers:** Native HTML5 Web Audio API nodes (`OscillatorNode`, `GainNode`, `BiquadFilterNode`).
-*   **Speech Synthesis:** HTML5 `SpeechSynthesis` engine with custom iOS/Android user-agent pitch-clipping protection.
-*   **Intelligence:** Groq Cloud LLaMA-3 AI completion with a local dictionary fallback.
-*   **Language:** The interface and the ops log are in English. **K.I.T.T. himself speaks Turkish** —
-    the persona, his replies and the synthesised voice are Turkish on purpose, because the voice
-    *is* the character. Type to him in Turkish.
+**Picking the voice is a preference ladder, not a lookup.** Named high-quality Turkish
+male voices first (Tolga on Windows, Cem on iOS), then any Turkish voice, then whatever
+the browser hands over. The list is also cached and refreshed from `voiceschanged`,
+because Chrome returns an empty array from the first `getVoices()` call — reading it
+once at startup gets you nothing.
 
----
+**The AI brain has three layers, tried in cost order.** An exact local command match
+answers instantly with no network at all. Otherwise the question goes to Groq's
+LLaMA-3. If that fails — no key, rate limit, no connection — a local Turkish
+dictionary keyed on substrings answers instead. The user is never shown an API error;
+K.I.T.T. simply replies from a smaller brain. A dashboard that goes mute because a
+third party is down is a worse dashboard.
 
-## 🚀 How to Run Locally
+**No API key lives in this repository.** The key is read from `localStorage` and
+entered by whoever is using the page. Cloning the repo gets you the local brain and
+nothing to leak.
 
-1.  Clone this repository:
-    ```bash
-    git clone https://github.com/ardazeybek-dev/K.I.T.T..git
-    ```
-2.  Navigate to the directory:
-    ```bash
-    cd K.I.T.T.
-    ```
-3.  Double-click `index.html` to open it in your browser!
-4.  **Note:** Make sure to click anywhere on the dark background to satisfy the browser's autoplay policies, allowing K.I.T.T. to speak and greet you immediately.
+**Speech is cancelled the moment the gas pedal goes down.** Otherwise a sentence
+that is still being spoken plays underneath the engine growl and both turn to mud.
 
----
+**Speed is three mutually exclusive timers.** Gas, brake, and a passive deceleration
+that only runs when neither pedal is held — and clears itself at zero instead of
+ticking forever against a stationary car.
 
-## 📜 License
+**Errors go to the ops log, never to a dialog.** Every audio and speech path is
+wrapped, and what fails is printed onto the dashboard in character. An `alert()` in
+a cockpit would break the illusion and block the page at the same time.
 
-This project is licensed under the MIT License - feel free to use and expand on it! Developed with 🧡 for Arda.
+## Running it
+
+```bash
+git clone https://github.com/ardazeybek-dev/K.I.T.T.git
+cd K.I.T.T
+```
+
+Open `index.html` in a browser. No server, no build step, no package install.
+
+> Browsers block audio until you interact with the page, so click anywhere on the dark
+> background first — then K.I.T.T. greets you. That is a browser rule, not a bug.
+
+To give him the LLaMA-3 brain, paste a [Groq API key](https://console.groq.com/keys)
+into the config field on the dashboard; it is kept in your browser only. Without one
+he falls back to the local dictionary and still answers.
+
+## Tech
+
+| | |
+|---|---|
+| Stack | HTML, CSS, JavaScript — one file, no build step |
+| Styling | TailwindCSS, Google Fonts and Lucide icons, all from a CDN |
+| Audio | Web Audio API — `OscillatorNode`, `GainNode`, `BiquadFilterNode`, a shared noise buffer, one master gain bus |
+| Speech | `SpeechSynthesis`, Turkish voice, pitch-shifted on desktop only |
+| AI | Groq `llama-3` over `fetch`, with an offline Turkish dictionary fallback |
+| Size | ~100 KB, ~2,000 lines |
+
+## License
+
+MIT — use it, break it, make it worse.
